@@ -28,12 +28,15 @@
   }
   .rest-name::placeholder { color: #6a6a7a; font-weight: 600; }
   .head-btns { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
-  /* On small phones, let the restaurant name drop to its own full-width row
-     so the buttons never get cut off. */
+  /* On small phones: keep the "Kitchen Timers" title on the SAME row as the
+     Test / Add Food buttons, and drop the restaurant name to its own row.
+     Title + buttons are made compact so they fit one line on a phone. */
   @media (max-width: 600px) {
-    header { flex-wrap: wrap; }
-    .brand { order: 1; }
-    .head-btns { order: 2; margin-left: auto; }
+    header { flex-wrap: wrap; gap: 8px; padding: 12px; }
+    .brand { order: 1; font-size: 16px; }
+    .head-btns { order: 2; margin-left: auto; gap: 8px; }
+    .head-btns .add-btn { font-size: 16px; padding: 11px 12px; }
+    .head-btns .add-btn.test { font-size: 15px; padding: 11px 11px; }
     .rest-name { order: 3; flex: 1 1 100%; }
   }
   .add-btn {
