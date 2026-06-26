@@ -34,10 +34,14 @@
     font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
     color: #f5a623;
   }
-  .rules { margin-top: 6px; }
-  .rule { font-size: 13px; font-style: italic; color: #9a9aa8; line-height: 1.4; }
+  .meta-row {
+    margin-top: 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    text-align: left;
+  }
+  .rule { font-size: 13px; font-style: italic; color: #9a9aa8; line-height: 1.45; }
   .add-btn {
-    position: absolute; top: 12px; right: 14px;
+    flex-shrink: 0;
     background: #f5a623; color: #16161c;
     border: none; border-radius: 12px;
     font-size: 16px; font-weight: 800;
@@ -103,9 +107,9 @@
   .modal .actions { display: flex; gap: 12px; margin-top: 6px; }
 
   @media (max-width: 600px) {
-    header { padding-top: 54px; }   /* clear the top-right Add Food button */
     .rest-name { font-size: 22px; }
-    .add-btn { top: 10px; right: 10px; font-size: 15px; padding: 10px 14px; }
+    .add-btn { font-size: 15px; padding: 10px 14px; }
+    .rule { font-size: 12px; }
   }
 </style>
 </head>
@@ -114,11 +118,13 @@
 <header>
   <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
   <div class="subtitle">Time / Temp Control Log</div>
-  <div class="rules">
-    <div class="rule">Temp not to exceed 70&deg;F</div>
-    <div class="rule">Discard after 4 hours</div>
+  <div class="meta-row">
+    <div class="rules">
+      <div class="rule">Temp not to exceed 70&deg;F</div>
+      <div class="rule">Discard after 4 hours</div>
+    </div>
+    <button class="add-btn" onclick="openAdd()">+ Add Food</button>
   </div>
-  <button class="add-btn" onclick="openAdd()">+ Add Food</button>
 </header>
 
 <div id="timers"></div>
