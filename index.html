@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kitchen Timers</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #1c1c24; color: #fff;
+    -webkit-user-select: none; user-select: none;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5;
+    background: #25252f; padding: 16px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,.4);
+  }
+  header h1 { font-size: 24px; margin: 0; font-weight: 700; }
+  .add-btn {
+    background: #f5a623; color: #1c1c24;
+    border: none; border-radius: 14px;
+    font-size: 22px; font-weight: 800;
+    padding: 14px 22px; cursor: pointer;
+  }
+  .add-btn:active { transform: scale(.96); }
+
+  #timers {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px; padding: 18px;
+  }
+  .card {
+    background: #2e2e3a; border-radius: 18px;
+    padding: 20px; text-align: center;
+    border: 3px solid transparent;
+  }
+  .card .name { font-size: 26px; font-weight: 700; margin-bottom: 4px; word-break: break-word; }
+  .card .time {
+    font-size: 60px; font-weight: 800;
+    font-variant-numeric: tabular-nums; line-height: 1.1;
+    margin: 6px 0 6px;
+  }
+  .card .temp {
+    font-size: 24px; font-weight: 700; color: #ff9b3d;
+    margin-bottom: 16px;
+  }
+  .card .temp.none { color: #6a6a7a; font-weight: 600; font-size: 18px; }
+  .card.ringing { border-color: #ff4d4d; animation: flash .7s infinite; }
+  @keyframes flash { 0%,100% { background: #2e2e3a; } 50% { background: #6b1414; } }
+  .card.done { opacity: .7; }
+
+  .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn { border: none; border-radius: 12px; font-size: 20px; font-weight: 700; padding: 14px 18px; cursor: pointer; flex: 1; min-width: 90px; color: #fff; }
+  .btn:active { transform: scale(.96); }
+  .btn.green { background: #2ecc71; color: #06301a; }
+  .btn.gray  { background: #4a4a59; }
+  .btn.red   { background: #ff4d4d; }
+  .btn.stop  { background: #ff4d4d; font-size: 28px; padding: 20px; }
+
+  .empty { text-align: center; color: #888; padding: 60px 20px; font-size: 20px; }
+
+  /* modal */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
+  .overlay.show { display: flex; }
+  .modal { background: #2e2e3a; border-radius: 20px; padding: 24px; width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }
+  .modal h2 { margin: 0 0 18px; font-size: 24px; text-align: center; }
+  .modal label { font-size: 18px; color: #bbb; display: block; margin-bottom: 8px; }
+  .modal input[type=text], .modal input[type=number] {
+    width: 100%; font-size: 24px; padding: 14px; border-radius: 12px; border: none;
+    margin-bottom: 18px; background: #1c1c24; color: #fff;
+  }
+  .stepper { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .stepper .lbl { flex: 1; }
+  .stepper .lbl small { display: block; color: #888; font-size: 14px; }
+  .step-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: #4a4a59; color: #fff; font-size: 30px; font-weight: 800; cursor: pointer; }
+  .step-btn:active { transform: scale(.92); }
+  .step-val { font-size: 32px; font-weight: 800; min-width: 54px; text-align: center; }
+  .modal .actions { display: flex; gap: 12px; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍤 Kitchen Timers</h1>
+  <button class="add-btn" onclick="openAdd()">+ Add Food</button>
+</header>
+
+<div id="timers"></div>
+<div class="empty" id="empty">No timers yet.<br>Tap <b>+ Add Food</b> to start one.</div>
+
+<!-- Add Food modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Add Food</h2>
+    <label>Food name</label>
+    <input type="text" id="foodName" placeholder="e.g. Meat, Veggie, Crab" autocomplete="off">
+
+    <div class="stepper">
+      <div class="lbl">Hours<small>tap − or +</small></div>
+      <button class="step-btn" onclick="bump('h',-1)">−</button>
+      <div class="step-val" id="hVal">0</div>
+      <button class="step-btn" onclick="bump('h',1)">+</button>
+    </div>
+
+    <div class="stepper">
+      <div class="lbl">Minutes<small>tap − or +</small></div>
+      <button class="step-btn" onclick="bump('m',-5)">−</button>
+      <div class="step-val" id="mVal">0</div>
+      <button class="step-btn" onclick="bump('m',5)">+</button>
+    </div>
+
+    <label>Hold temp °F <small style="color:#888">(optional)</small></label>
+    <input type="number" id="foodTemp" inputmode="numeric" placeholder="e.g. 165">
+
+    <div class="actions">
+      <button class="btn gray" onclick="closeAdd()">Cancel</button>
+      <button class="btn green" onclick="startTimer()">Start Timer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- state ---------- */
+let timers = [];   // {id,name,total,remaining,state:'running'|'paused'|'ringing'|'done',endAt,temp}
+let addH = 0, addM = 0;
+
+const $ = id => document.getElementById(id);
+const STORE = 'kitchenTimersV3';
+const timeEls = new Map();   // id -> .time element (so countdown updates don't rebuild buttons)
+
+/* ---------- persistence ---------- */
+function save() { try { localStorage.setItem(STORE, JSON.stringify(timers)); } catch (e) {} }
+function load() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORE) || '[]');
+    const now = Date.now();
+    data.forEach(t => {
+      if (t.state === 'running' && t.endAt) {
+        t.remaining = Math.max(0, Math.round((t.endAt - now) / 1000));
+        if (t.remaining === 0) t.state = 'ringing';
+      }
+    });
+    timers = data;
+  } catch (e) { timers = []; }
+}
+
+/* ---------- add modal ---------- */
+function openAdd() {
+  addH = 0; addM = 0;
+  $('foodName').value = ''; $('foodTemp').value = '';
+  $('hVal').textContent = 0; $('mVal').textContent = 0;
+  $('overlay').classList.add('show'); unlockAudio();
+}
+function closeAdd() { $('overlay').classList.remove('show'); }
+function bump(w, d) {
+  if (w === 'h') addH = Math.max(0, Math.min(23, addH + d));
+  else addM = Math.max(0, Math.min(55, addM + d));
+  $('hVal').textContent = addH; $('mVal').textContent = addM;
+}
+function startTimer() {
+  const name = $('foodName').value.trim() || 'Food';
+  const total = addH * 3600 + addM * 60;
+  if (total <= 0) { alert('Set a time first (hours or minutes).'); return; }
+  const tempRaw = $('foodTemp').value.trim();
+  const temp = tempRaw === '' ? null : Number(tempRaw);
+  timers.push({ id: uid(), name, total, remaining: total, state: 'running', endAt: Date.now() + total * 1000, temp: (temp != null && !isNaN(temp)) ? temp : null });
+  save(); render(); closeAdd();
+}
+
+/* ---------- controls ---------- */
+function pauseResume(id) {
+  const t = timers.find(x => x.id === id); if (!t) return;
+  if (t.state === 'running') { t.remaining = Math.max(0, Math.round((t.endAt - Date.now()) / 1000)); t.state = 'paused'; }
+  else if (t.state === 'paused') { t.endAt = Date.now() + t.remaining * 1000; t.state = 'running'; }
+  save(); render();
+}
+function restart(id) {
+  const t = timers.find(x => x.id === id); if (!t) return;
+  t.remaining = t.total; t.endAt = Date.now() + t.total * 1000; t.state = 'running';
+  save(); render();
+}
+function stopRing(id) { const t = timers.find(x => x.id === id); if (!t) return; t.state = 'done'; t.remaining = 0; save(); render(); }
+function del(id) { timers = timers.filter(x => x.id !== id); save(); render(); }
+
+/* ---------- render (full rebuild on changes only) ---------- */
+function fmt(s) {
+  s = Math.max(0, s);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const p = n => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${p(m)}:${p(sec)}` : `${m}:${p(sec)}`;
+}
+function render() {
+  const wrap = $('timers'); timeEls.clear();
+  $('empty').style.display = timers.length ? 'none' : 'block';
+  wrap.innerHTML = '';
+  timers.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '');
+    let controls;
+    if (t.state === 'ringing') controls = `<button class="btn stop" onclick="stopRing('${t.id}')">STOP</button>`;
+    else if (t.state === 'done') controls = `<div class="row"><button class="btn green" onclick="restart('${t.id}')">Restart</button><button class="btn gray" onclick="del('${t.id}')">Delete</button></div>`;
+    else controls = `<div class="row"><button class="btn green" onclick="pauseResume('${t.id}')">${t.state === 'running' ? 'Pause' : 'Resume'}</button><button class="btn gray" onclick="restart('${t.id}')">Reset</button><button class="btn red" onclick="del('${t.id}')">Delete</button></div>`;
+    const label = t.state === 'ringing' ? 'DONE!' : (t.state === 'done' ? 'Done' : fmt(t.remaining));
+    const tempLine = (t.temp != null)
+      ? `<div class="temp">🌡️ Hold ${t.temp}°F</div>`
+      : `<div class="temp none">no temp set</div>`;
+    card.innerHTML = `<div class="name">${esc(t.name)}</div><div class="time">${label}</div>${tempLine}${controls}`;
+    wrap.appendChild(card);
+    timeEls.set(t.id, card.querySelector('.time'));
+  });
+}
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function uid() { return Date.now().toString(36) + '-' + Math.floor(performance.now()).toString(36) + '-' + (uid._n = (uid._n || 0) + 1); }
+
+/* ---------- tick (updates numbers only, never rebuilds buttons mid-countdown) ---------- */
+setInterval(() => {
+  const now = Date.now();
+  timers.forEach(t => {
+    if (t.state === 'running') {
+      const rem = Math.max(0, Math.round((t.endAt - now) / 1000));
+      if (rem !== t.remaining) { t.remaining = rem; const el = timeEls.get(t.id); if (el) el.textContent = fmt(rem); }
+      if (rem === 0) { t.state = 'ringing'; save(); render(); }
+    }
+  });
+  timers.some(t => t.state === 'ringing') ? startAlarm() : stopAlarm();
+}, 250);
+
+/* ---------- alarm (loops until stopped) ---------- */
+let audioCtx = null, alarmTimer = null;
+function unlockAudio() {
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function beep() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'square'; o.frequency.value = 880; g.gain.value = 0.3;
+  o.connect(g); g.connect(audioCtx.destination);
+  const n = audioCtx.currentTime;
+  g.gain.setValueAtTime(0.3, n); g.gain.setValueAtTime(0.0001, n + 0.25);
+  o.start(n); o.stop(n + 0.3);
+}
+function startAlarm() { unlockAudio(); if (alarmTimer) return; beep(); alarmTimer = setInterval(beep, 600); }
+function stopAlarm() { if (alarmTimer) { clearInterval(alarmTimer); alarmTimer = null; } }
+
+document.body.addEventListener('touchstart', unlockAudio, { once: true });
+document.body.addEventListener('click', unlockAudio, { once: true });
+$('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
+$('foodTemp').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
+
+/* ---------- boot ---------- */
+load(); render();
+if (timers.some(t => t.state === 'ringing')) startAlarm();
+</script>
+</body>
+</html>
