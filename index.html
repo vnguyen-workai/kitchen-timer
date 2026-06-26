@@ -116,6 +116,13 @@
       <button class="step-btn" onclick="bump('m',5)">+</button>
     </div>
 
+    <div class="stepper">
+      <div class="lbl">Seconds<small>tap − or +</small></div>
+      <button class="step-btn" onclick="bump('s',-10)">−</button>
+      <div class="step-val" id="sVal">0</div>
+      <button class="step-btn" onclick="bump('s',10)">+</button>
+    </div>
+
     <label>Hold temp °F <small style="color:#888">(optional)</small></label>
     <input type="number" id="foodTemp" inputmode="numeric" placeholder="e.g. 165">
 
@@ -129,7 +136,7 @@
 <script>
 /* ---------- state ---------- */
 let timers = [];   // {id,name,total,remaining,state:'running'|'paused'|'ringing'|'done',endAt,temp}
-let addH = 0, addM = 0;
+let addH = 0, addM = 0, addS = 0;
 
 const $ = id => document.getElementById(id);
 const STORE = 'kitchenTimersV3';
@@ -153,21 +160,21 @@ function load() {
 
 /* ---------- add modal ---------- */
 function openAdd() {
-  addH = 0; addM = 0;
+  addH = 0; addM = 0; addS = 0;
   $('foodName').value = ''; $('foodTemp').value = '';
-  $('hVal').textContent = 0; $('mVal').textContent = 0;
+  $('hVal').textContent = 0; $('mVal').textContent = 0; $('sVal').textContent = 0;
   $('overlay').classList.add('show'); unlockAudio();
 }
 function closeAdd() { $('overlay').classList.remove('show'); }
 function bump(w, d) {
-  if (w === 'h') addH = Math.max(0, Math.min(23, addH + d));
-  else addM = Math.max(0, Math.min(55, addM + d));
-  $('hVal').textContent = addH; $('mVal').textContent = addM;
+  if (w === 'h') { addH = Math.max(0, Math.min(23, addH + d)); $('hVal').textContent = addH; }
+  else if (w === 'm') { addM = Math.max(0, Math.min(55, addM + d)); $('mVal').textContent = addM; }
+  else { addS = Math.max(0, Math.min(50, addS + d)); $('sVal').textContent = addS; }
 }
 function startTimer() {
   const name = $('foodName').value.trim() || 'Food';
-  const total = addH * 3600 + addM * 60;
-  if (total <= 0) { alert('Set a time first (hours or minutes).'); return; }
+  const total = addH * 3600 + addM * 60 + addS;
+  if (total <= 0) { alert('Set a time first (hours, minutes, or seconds).'); return; }
   const tempRaw = $('foodTemp').value.trim();
   const temp = tempRaw === '' ? null : Number(tempRaw);
   timers.push({ id: uid(), name, total, remaining: total, state: 'running', endAt: Date.now() + total * 1000, temp: (temp != null && !isNaN(temp)) ? temp : null });
