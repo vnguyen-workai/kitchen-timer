@@ -18,7 +18,7 @@
     display: flex; align-items: center; gap: 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,.4);
   }
-  .brand { font-size: 28px; line-height: 1; flex-shrink: 0; }
+  .brand { font-size: 19px; font-weight: 700; line-height: 1.15; flex-shrink: 0; white-space: nowrap; }
   .rest-name {
     flex: 1; min-width: 100px;
     font-size: 20px; font-weight: 700; text-align: center;
@@ -110,7 +110,7 @@
 <body>
 
 <header>
-  <span class="brand">🍤</span>
+  <span class="brand">Kitchen Timers</span>
   <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
   <div class="head-btns">
     <button class="add-btn test" onclick="testSound()">🔊 Test</button>
@@ -231,7 +231,7 @@ function render() {
     const label = t.state === 'ringing' ? 'DONE!' : (t.state === 'done' ? 'Done' : fmt(t.remaining));
     const clockLine = `<div class="clock">Started ${clock(t.startAt)} · <b>Discard ${clock(t.endAt)}</b></div>`;
     const tempLine = (t.temp != null)
-      ? `<div class="temp">🌡️ Hold ${t.temp}°F</div>`
+      ? `<div class="temp">🌡️ ${t.temp}°F</div>`
       : `<div class="temp none">no temp set</div>`;
     card.innerHTML = `<div class="name">${esc(t.name)}</div><div class="time">${label}</div>${clockLine}${tempLine}${controls}`;
     wrap.appendChild(card);
