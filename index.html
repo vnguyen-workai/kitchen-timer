@@ -138,7 +138,7 @@
     <label>Food name</label>
     <input type="text" id="foodName" placeholder="e.g. Meat, Veggie, Crab" autocomplete="off">
 
-    <label>Hold temp °F <small style="color:#888">(optional)</small></label>
+    <label>Start temp °F <small style="color:#888">(optional)</small></label>
     <input type="number" id="foodTemp" inputmode="numeric" placeholder="e.g. 165">
 
     <div class="actions">
@@ -239,7 +239,7 @@ function render() {
     const label = t.state === 'ringing' ? 'DONE!' : (t.state === 'done' ? 'Done' : fmt(t.remaining));
     const clockLine = `<div class="clock">Start ${clock(t.startAt)} · <b>End ${clock(t.endAt)}</b></div>`;
     const tempLine = (t.temp != null)
-      ? `<div class="temp">🌡️ ${t.temp}°F</div>`
+      ? `<div class="temp">🌡️ Start temp ${t.temp}°F</div>`
       : `<div class="temp none">no temp set</div>`;
     card.innerHTML = `<div class="name">${esc(t.name)}</div><div class="time">${label}</div>${clockLine}${tempLine}${controls}`;
     wrap.appendChild(card);
