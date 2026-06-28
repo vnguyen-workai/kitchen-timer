@@ -25,19 +25,19 @@
     display: block; width: 100%; max-width: 620px;
     font-size: 30px; font-weight: 800; letter-spacing: -.3px;
     background: transparent; color: #111827; border: none; border-radius: 8px;
-    padding: 2px 168px 2px 6px; margin: 0 0 0 -6px;
+    padding: 2px 210px 2px 6px; margin: 0 0 0 -6px;
   }
   .rest-name::placeholder { color: #c0c5cd; }
   .rest-name:focus { outline: none; background: #f3f5f8; }
   .subtitle { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #2563eb; margin-top: 2px; }
   .add-btn {
-    position: absolute; top: 24px; right: 84px;
+    position: absolute; top: 22px; right: 24px;
     background: #2563eb; color: #fff; border: none; border-radius: 12px;
     font-size: 16px; font-weight: 700; padding: 13px 20px; cursor: pointer; white-space: nowrap;
   }
   .add-btn:active { transform: scale(.97); }
   .menu-btn {
-    position: absolute; top: 22px; right: 24px;
+    position: absolute; top: 26px; right: 170px;
     width: 38px; height: 30px; background: transparent; border: none; border-radius: 0;
     cursor: pointer; padding: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px;
   }
@@ -151,8 +151,9 @@
   }
   /* small phones in landscape: lift Add Food up to the top-right next to the menu */
   @media (max-width: 600px) and (orientation: landscape) {
-    .add-btn { position: absolute; top: 18px; right: 62px; margin-left: 0; }
-    .rest-name { padding-right: 190px; }
+    .add-btn { position: absolute; top: 16px; right: 16px; margin-left: 0; }
+    .menu-btn { top: 20px; right: 140px; }
+    .rest-name { padding-right: 180px; }
   }
 </style>
 </head>
