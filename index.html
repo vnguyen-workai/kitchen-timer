@@ -141,10 +141,11 @@
   .swatch.sel { border-color: #1f2733; transform: scale(1.08); }
 
   @media (max-width: 600px) {
-    header { padding: 16px 16px 14px; }
+    header { position: relative; padding: 16px 16px 14px; }
+    .menu-btn { position: absolute; top: 16px; right: 16px; }
     .head-top { flex-wrap: wrap; }
-    .head-left { flex-basis: 100%; }
-    .head-actions { margin-left: auto; margin-top: 6px; }
+    .head-left { flex-basis: 100%; padding-right: 62px; }
+    .head-actions { margin-left: auto; margin-top: 8px; }
     .rest-name { font-size: 26px; }
     .toolbar { padding: 14px 16px 2px; }
     #timers { padding: 14px 16px; }
