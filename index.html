@@ -149,6 +149,11 @@
     .toolbar { padding: 14px 16px 2px; }
     #timers { padding: 14px 16px; }
   }
+  /* landscape (desktop, TV, tablet/phone sideways): center the name + subtitle */
+  @media (orientation: landscape) {
+    .rest-name { text-align: center; max-width: none; padding-left: 64px; padding-right: 64px; margin-left: 0; }
+    .subtitle { text-align: center; }
+  }
 </style>
 </head>
 <body>
