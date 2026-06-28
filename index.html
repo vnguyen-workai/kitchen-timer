@@ -20,27 +20,27 @@
   .ic { width: 1em; height: 1em; vertical-align: -0.13em; }
 
   /* ---------- header ---------- */
-  header { background: #fff; padding: 20px 24px 16px; border-bottom: 1px solid #e5e7eb; }
-  .head-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
-  .head-left { min-width: 0; flex: 1; }
+  header { position: relative; background: #fff; padding: 20px 24px 16px; border-bottom: 1px solid #e5e7eb; }
   .rest-name {
-    display: block; width: 100%; max-width: 560px;
+    display: block; width: 100%; max-width: 620px;
     font-size: 30px; font-weight: 800; letter-spacing: -.3px;
     background: transparent; color: #111827; border: none; border-radius: 8px;
-    padding: 2px 6px; margin: 0 0 0 -6px;
+    padding: 2px 168px 2px 6px; margin: 0 0 0 -6px;
   }
   .rest-name::placeholder { color: #c0c5cd; }
   .rest-name:focus { outline: none; background: #f3f5f8; }
-  .subtitle { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #2563eb; margin-top: 2px; }
-  .head-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .subrow { display: flex; align-items: center; gap: 12px; margin-top: 2px; }
+  .subtitle { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #2563eb; }
   .add-btn {
+    position: absolute; top: 24px; right: 84px;
     background: #2563eb; color: #fff; border: none; border-radius: 12px;
     font-size: 16px; font-weight: 700; padding: 13px 20px; cursor: pointer; white-space: nowrap;
   }
   .add-btn:active { transform: scale(.97); }
   .menu-btn {
+    position: absolute; top: 20px; right: 24px;
     width: 48px; height: 48px; background: #1f2733; border: none; border-radius: 12px;
-    cursor: pointer; padding: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; flex-shrink: 0;
+    cursor: pointer; padding: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
   }
   .menu-btn:active { transform: scale(.95); }
   .menu-btn span { display: block; width: 20px; height: 2.5px; background: #fff; border-radius: 2px; }
@@ -141,30 +141,25 @@
   .swatch.sel { border-color: #1f2733; transform: scale(1.08); }
 
   @media (max-width: 600px) {
-    header { position: relative; padding: 16px 16px 14px; }
-    .menu-btn { position: absolute; top: 16px; right: 16px; }
-    .head-top { flex-wrap: wrap; }
-    .head-left { flex-basis: 100%; padding-right: 62px; }
-    .head-actions { margin-left: auto; margin-top: 8px; }
-    .rest-name { font-size: 26px; }
+    header { padding: 16px 16px 14px; }
+    .menu-btn { top: 16px; right: 16px; }
+    .rest-name { font-size: 26px; padding-right: 58px; }
+    .subrow { gap: 10px; }
+    .subtitle { font-size: 12px; letter-spacing: 1px; }
+    .add-btn { position: static; margin-left: auto; font-size: 14px; padding: 11px 14px; }
     .toolbar { padding: 14px 16px 2px; }
     #timers { padding: 14px 16px; }
-    .add-btn { font-size: 15px; padding: 12px 15px; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="head-top">
-    <div class="head-left">
-      <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
-      <div class="subtitle">TIME / TEMP CONTROL LOG</div>
-    </div>
-    <div class="head-actions">
-      <button class="add-btn" onclick="openAdd()">+ Add Food</button>
-      <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
-    </div>
+  <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
+  <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
+  <div class="subrow">
+    <div class="subtitle">TIME / TEMP CONTROL LOG</div>
+    <button class="add-btn" onclick="openAdd()">+ Add Food</button>
   </div>
   <div class="rules">
     <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>Temp must not exceed 70&deg;F</span>
