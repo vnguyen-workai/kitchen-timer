@@ -149,6 +149,11 @@
     .toolbar { padding: 14px 16px 2px; }
     #timers { padding: 14px 16px; }
   }
+  /* small phones in landscape: lift Add Food up to the top-right next to the menu */
+  @media (max-width: 600px) and (orientation: landscape) {
+    .add-btn { position: absolute; top: 18px; right: 62px; margin-left: 0; }
+    .rest-name { padding-right: 190px; }
+  }
 </style>
 </head>
 <body>
