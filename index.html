@@ -74,7 +74,7 @@
   .badge .dot { width: 9px; height: 9px; border-radius: 50%; }
   .badge.discard { color: #dc2626; } .badge.discard .dot { background: #dc2626; }
   .badge.done { color: #6b7280; } .badge.done .dot { background: #9ca3af; }
-  .ctime { font-size: calc(42px * var(--scale)); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(8px * var(--scale)) 0 calc(10px * var(--scale)); letter-spacing: -1px; }
+  .ctime { font-size: calc(84px * var(--scale)); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(8px * var(--scale)) 0 calc(10px * var(--scale)); letter-spacing: -1px; text-align: center; }
   .pbar { height: calc(7px * var(--scale)); background: #eceff3; border-radius: 99px; overflow: hidden; }
   .pfill { height: 100%; border-radius: 99px; transition: width .3s linear; }
   .cfoot { display: flex; flex-direction: column; gap: calc(13px * var(--scale)); margin-top: calc(14px * var(--scale)); }
@@ -148,11 +148,16 @@
     .add-btn { font-size: 14px; padding: 11px 14px; }
     .toolbar { padding: 14px 16px 2px; }
     #timers { padding: 14px 16px; }
+    /* phone 2-col cards are too narrow for the doubled timer — keep it fitting */
+    .ctime { font-size: calc(46px * var(--scale)); }
   }
   /* landscape (desktop, TV, tablet/phone sideways): center the name + subtitle */
   @media (orientation: landscape) {
     .rest-name { text-align: center; max-width: none; padding-left: 64px; padding-right: 64px; margin-left: 0; }
     .subtitle { text-align: center; }
+    /* keep cards portrait-shaped (not wide rectangles) in landscape */
+    #timers { justify-items: center; }
+    .card { max-width: 340px; margin-left: auto; margin-right: auto; }
   }
 </style>
 </head>
