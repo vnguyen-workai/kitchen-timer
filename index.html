@@ -74,7 +74,7 @@
   .badge .dot { width: 9px; height: 9px; border-radius: 50%; }
   .badge.discard { color: #dc2626; } .badge.discard .dot { background: #dc2626; }
   .badge.done { color: #6b7280; } .badge.done .dot { background: #9ca3af; }
-  .ctime { font-size: calc(84px * var(--scale)); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(14px * var(--scale)) 0 calc(4px * var(--scale)); letter-spacing: -1px; text-align: center; }
+  .ctime { font-size: var(--timer-fs, calc(84px * var(--scale))); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(14px * var(--scale)) 0 calc(4px * var(--scale)); letter-spacing: -1px; text-align: center; white-space: nowrap; }
   .pbar { height: calc(7px * var(--scale)); background: #eceff3; border-radius: 99px; overflow: hidden; }
   .pfill { height: 100%; border-radius: 99px; transition: width .3s linear; }
   .cfoot { display: flex; flex-direction: column; gap: calc(13px * var(--scale)); margin-top: calc(14px * var(--scale)); }
@@ -148,8 +148,6 @@
     .add-btn { font-size: 14px; padding: 11px 14px; }
     .toolbar { padding: 14px 16px 2px; }
     #timers { padding: 14px 16px; }
-    /* phone 2-col cards are too narrow for the doubled timer — keep it fitting */
-    .ctime { font-size: calc(46px * var(--scale)); }
   }
   /* landscape (desktop, TV, tablet/phone sideways): center the name + subtitle */
   @media (orientation: landscape) {
@@ -542,6 +540,11 @@ function layoutGrid() {
   const scale = Math.max(0.62, Math.min(1.18, Math.min(hScale, wScale)));
   grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
   document.documentElement.style.setProperty('--scale', scale);
+  // Timer must always fit the card width ("H:MM:SS" ≈ 3.6 char-widths). Cap at the
+  // doubled size on roomy cards; shrink as needed so it never clips on narrow columns.
+  const contentW = colW - 36 * scale - 8;   // minus card padding + small safety
+  const timerFs = Math.max(20, Math.min(84 * scale, contentW / 3.6));
+  document.documentElement.style.setProperty('--timer-fs', timerFs + 'px');
 }
 function setPerScreen(n, e) { if (e) e.stopPropagation(); settings.perScreen = n; saveSettings(); updateMenu(); layoutGrid(); }
 
