@@ -517,12 +517,15 @@ function menuClearAll() { if (timers.length && confirm('Delete ALL food cards? T
 
 /* ---------- fit N cards per screen ---------- */
 function colsFor(n) {
-  const landscape = window.innerWidth > window.innerHeight;
-  const phonePortrait = !landscape && window.innerWidth < 760;
-  if (phonePortrait) return 2;   // portrait phone: 2 columns
-  if (n === 6) return 3;         // landscape (phone/tablet/TV) + tablet/desktop: 3–4 cols
-  if (n === 12) return 4;
-  return 6;                      // 18
+  const w = window.innerWidth;
+  const landscape = w > window.innerHeight;
+  const phonePortrait = !landscape && w < 760;
+  if (phonePortrait) return 2;   // portrait phone: always 2 columns
+  // desired columns for the per-screen setting…
+  const want = n === 6 ? 3 : n === 12 ? 4 : 6;
+  // …but never so many that cards get narrower than ~200px (keeps them readable on phones)
+  const maxCols = Math.max(2, Math.floor((w - 32) / 200));
+  return Math.min(want, maxCols);
 }
 function layoutGrid() {
   const grid = $('timers'); if (!grid) return;
