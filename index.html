@@ -68,28 +68,29 @@
     padding: calc(18px * var(--scale)) calc(18px * var(--scale));
     box-shadow: 0 1px 3px rgba(16,24,40,.06);
   }
-  .kebab { position: absolute; top: 12px; right: 10px; width: 30px; height: 30px; border: none; background: transparent; color: #9aa1ab; font-size: 22px; line-height: 1; cursor: pointer; border-radius: 8px; }
-  .kebab:active { background: #f0f2f5; }
-  .cname { font-size: calc(19px * var(--scale)); font-weight: 800; color: #111827; padding-right: 28px; word-break: break-word; }
-  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: calc(11px * var(--scale)); font-weight: 800; letter-spacing: .5px; margin-top: 7px; }
-  .badge .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .badge.safe { color: #16a34a; } .badge.safe .dot { background: #16a34a; }
+  .color-dot { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(0,0,0,.12); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.45); }
+  .color-dot:active { transform: scale(.9); }
+  .cname { font-size: calc(25px * var(--scale)); font-weight: 800; color: #111827; padding-right: 34px; word-break: break-word; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: calc(12px * var(--scale)); font-weight: 800; letter-spacing: .5px; margin-top: 7px; }
+  .badge .dot { width: 9px; height: 9px; border-radius: 50%; }
   .badge.discard { color: #dc2626; } .badge.discard .dot { background: #dc2626; }
   .badge.done { color: #6b7280; } .badge.done .dot { background: #9ca3af; }
-  .ctime { font-size: calc(40px * var(--scale)); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(6px * var(--scale)) 0 calc(10px * var(--scale)); letter-spacing: -1px; }
+  .ctime { font-size: calc(42px * var(--scale)); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(8px * var(--scale)) 0 calc(10px * var(--scale)); letter-spacing: -1px; }
   .pbar { height: calc(7px * var(--scale)); background: #eceff3; border-radius: 99px; overflow: hidden; }
   .pfill { height: 100%; border-radius: 99px; transition: width .3s linear; }
-  .cfoot { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: calc(14px * var(--scale)); }
-  .finfo { display: flex; gap: calc(16px * var(--scale)); flex-wrap: wrap; }
-  .fcol { display: flex; flex-direction: column; gap: 2px; }
-  .flabel { font-size: calc(11px * var(--scale)); color: #9aa1ab; font-weight: 600; }
-  .fval { font-size: calc(14px * var(--scale)); font-weight: 700; color: #374151; white-space: nowrap; }
+  .cfoot { display: flex; flex-direction: column; gap: calc(13px * var(--scale)); margin-top: calc(14px * var(--scale)); }
+  .finfo { display: flex; gap: calc(12px * var(--scale)); justify-content: space-between; }
+  .fcol { display: flex; flex-direction: column; gap: 3px; }
+  .flabel { font-size: calc(12px * var(--scale)); color: #8a93a0; font-weight: 600; }
+  .fval { font-size: calc(18px * var(--scale)); font-weight: 800; color: #1f2733; white-space: nowrap; }
   .fval.blue { color: #2563eb; }
-  .act { border-radius: 10px; font-size: calc(13px * var(--scale)); font-weight: 700; cursor: pointer; padding: calc(9px * var(--scale)) calc(12px * var(--scale)); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
-  .act .ic { font-size: calc(15px * var(--scale)); }
+  .cbtns { display: flex; gap: 10px; }
+  .act { border-radius: 10px; font-size: calc(15px * var(--scale)); font-weight: 700; cursor: pointer; padding: calc(11px * var(--scale)) calc(10px * var(--scale)); display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; flex: 1; }
+  .act .ic { font-size: calc(16px * var(--scale)); }
   .act.reset { background: #fff; color: #374151; border: 1.5px solid #d7dce2; }
+  .act.del { background: #fee2e2; color: #dc2626; border: none; }
   .act.again { background: #2563eb; color: #fff; border: none; }
-  .act.stop { background: #dc2626; color: #fff; border: none; font-size: calc(15px * var(--scale)); padding: calc(11px * var(--scale)) calc(20px * var(--scale)); }
+  .act.stop { background: #dc2626; color: #fff; border: none; font-size: calc(16px * var(--scale)); padding: calc(12px * var(--scale)); }
   .act:active { transform: scale(.96); }
   .card.ringing { border-color: #f3a8a3; animation: flash .8s infinite; }
   @keyframes flash { 0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } 50% { box-shadow: 0 0 0 4px rgba(220,38,38,.25); } }
@@ -235,18 +236,6 @@
   </div>
 </div>
 
-<!-- Card actions (kebab) -->
-<div class="overlay" id="cardMenuOverlay">
-  <div class="modal">
-    <h2 id="cardMenuTitle">Food</h2>
-    <div class="actions-col">
-      <button class="btn light" onclick="cardMenuColor()">🎨 Change color</button>
-      <button class="btn danger" onclick="cardMenuDelete()">Delete</button>
-      <button class="btn ghost" onclick="closeCardMenu()">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <script>
 /* ---------- colors (light theme) ---------- */
 const COLORS = {
@@ -270,7 +259,6 @@ let timers = [];   // {id,name,total,remaining,state:'running'|'ringing'|'done',
 let settings = { autoReset: false, sound: true, perScreen: 6, sort: 'soonest' };
 let addColor = 'slate';
 let colorEditId = null;
-let cardMenuId = null;
 let menuOpen = false;
 const FOUR_HOURS = 4 * 3600;
 
@@ -358,16 +346,6 @@ function openColor(id, e) {
   $('colorOverlay').classList.add('show');
 }
 function closeColor() { $('colorOverlay').classList.remove('show'); }
-function openCardMenu(id, e) {
-  if (e) e.stopPropagation();
-  cardMenuId = id;
-  const t = timers.find(x => x.id === id);
-  $('cardMenuTitle').textContent = t ? t.name : 'Food';
-  $('cardMenuOverlay').classList.add('show');
-}
-function closeCardMenu() { $('cardMenuOverlay').classList.remove('show'); }
-function cardMenuColor() { closeCardMenu(); openColor(cardMenuId); }
-function cardMenuDelete() { del(cardMenuId); closeCardMenu(); }
 
 /* ---------- controls ---------- */
 function restart(id) {
@@ -425,32 +403,33 @@ function render() {
     card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '');
     card.style.background = col.bg; card.style.borderColor = col.bd;
 
-    let badge, action, label, w, c;
+    let badge, btns, label, w, c;
     if (t.state === 'ringing') {
       badge = '<div class="badge discard"><span class="dot"></span>DISCARD</div>';
-      action = `<button class="act stop" onclick="stopRing('${t.id}')">Stop</button>`;
+      btns = `<button class="act stop" onclick="stopRing('${t.id}')">Stop</button>`;
       label = '0:00:00'; w = 100; c = '#dc2626';
     } else if (t.state === 'done') {
       badge = '<div class="badge done"><span class="dot"></span>DONE</div>';
-      action = `<button class="act again" onclick="restart('${t.id}')">Start again</button>`;
+      btns = `<button class="act again" onclick="restart('${t.id}')">Start again</button><button class="act del" onclick="del('${t.id}')">Delete</button>`;
       label = 'Done'; w = 0; c = '#9ca3af';
     } else {
-      badge = '<div class="badge safe"><span class="dot"></span>SAFE</div>';
-      action = `<button class="act reset" onclick="restart('${t.id}')">${ICON_RESET} Reset</button>`;
+      badge = '';
+      btns = `<button class="act reset" onclick="restart('${t.id}')">${ICON_RESET} Reset</button><button class="act del" onclick="del('${t.id}')">Delete</button>`;
       label = fmt(t.remaining); w = (t.remaining / t.total * 100); c = barColor(t.remaining);
     }
     const tempVal = (t.temp != null) ? (t.temp + '°F') : '—';
+    const dotColor = (t.color === 'slate') ? '#cbd2da' : col.ac;
     card.innerHTML =
-      `<button class="kebab" onclick="openCardMenu('${t.id}',event)" aria-label="Options">⋮</button>` +
+      `<button class="color-dot" style="background:${dotColor}" onclick="openColor('${t.id}',event)" aria-label="Change color"></button>` +
       `<div class="cname" style="color:${col.ac}">${esc(t.name)}</div>` +
       badge +
       `<div class="ctime">${label}</div>` +
       `<div class="pbar"><div class="pfill" style="width:${w}%;background:${c}"></div></div>` +
       `<div class="cfoot"><div class="finfo">` +
-        `<div class="fcol"><span class="flabel">Discard at</span><span class="fval blue">${clock(t.endAt)}</span></div>` +
         `<div class="fcol"><span class="flabel">Started</span><span class="fval">${clock(t.startAt)}</span></div>` +
+        `<div class="fcol"><span class="flabel">End</span><span class="fval blue">${clock(t.endAt)}</span></div>` +
         `<div class="fcol"><span class="flabel">Start temp</span><span class="fval">${tempVal}</span></div>` +
-      `</div>${action}</div>`;
+      `</div><div class="cbtns">${btns}</div></div>`;
     wrap.appendChild(card);
     timeEls.set(t.id, card.querySelector('.ctime'));
     barEls.set(t.id, card.querySelector('.pfill'));
