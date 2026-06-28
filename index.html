@@ -13,25 +13,25 @@
     -webkit-user-select: none; user-select: none;
   }
 
-  /* ---------- header (centered masthead) ---------- */
+  /* ---------- header ---------- */
   header {
     position: relative;
     text-align: center;
-    padding: 14px 16px 14px;
+    padding: 16px 64px 14px;
     background: #20202a;
     border-bottom: 1px solid #2e2e3a;
   }
   .rest-name {
-    display: block; width: 100%; max-width: 520px; margin: 0 auto;
-    font-size: 24px; font-weight: 800; text-align: center; letter-spacing: .3px;
+    display: block; width: 100%; max-width: 720px; margin: 0 auto;
+    font-size: 46px; font-weight: 800; text-align: center; letter-spacing: .3px;
     background: transparent; color: #fff;
-    border: none; border-radius: 10px; padding: 3px 8px;
+    border: none; border-radius: 10px; padding: 2px 8px;
   }
   .rest-name::placeholder { color: #565664; font-weight: 700; }
   .rest-name:focus { outline: none; background: #16161c; box-shadow: 0 0 0 2px #f5a623; }
   .subtitle {
     margin-top: 4px;
-    font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 22px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
     color: #f5a623;
   }
   .meta-row {
@@ -49,6 +49,40 @@
   }
   .add-btn:active { transform: scale(.96); }
 
+  /* ---------- hamburger menu button ---------- */
+  .menu-btn {
+    position: absolute; top: 14px; right: 14px;
+    width: 46px; height: 46px;
+    background: #2e2e3a; border: 1px solid #3a3a46; border-radius: 12px;
+    cursor: pointer; padding: 0;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+  }
+  .menu-btn:active { transform: scale(.95); }
+  .menu-btn span { display: block; width: 22px; height: 2.5px; background: #fff; border-radius: 2px; }
+
+  .menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; z-index: 20; }
+  .menu-backdrop.show { display: block; }
+  .menu-panel {
+    position: fixed; top: 66px; right: 12px; width: 268px; max-width: calc(100vw - 24px);
+    background: #2e2e3a; border: 1px solid #3a3a46; border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(0,0,0,.55); z-index: 21; display: none; overflow: hidden;
+  }
+  .menu-panel.show { display: block; }
+  .menu-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 14px 16px; font-size: 17px; font-weight: 600; color: #fff; cursor: pointer;
+  }
+  .menu-row:active { background: #34343f; }
+  .menu-title { font-size: 17px; font-weight: 700; }
+  .menu-sub { font-size: 12px; color: #9a9aa8; font-weight: 500; margin-top: 2px; }
+  .menu-divider { height: 1px; background: #3a3a46; margin: 4px 0; }
+  .menu-row.danger { color: #ff6b63; }
+  .switch {
+    font-size: 13px; font-weight: 800; padding: 6px 0; width: 52px; text-align: center;
+    border-radius: 999px; background: #4a4a59; color: #cfcfda; flex-shrink: 0;
+  }
+  .switch.on { background: #2ecc71; color: #06301a; }
+
   /* ---------- timer cards ---------- */
   #timers {
     display: grid;
@@ -57,30 +91,29 @@
     max-width: 1100px; margin: 0 auto;
   }
   .card {
+    position: relative;
     background: #262630; border-radius: 20px;
     padding: 22px 20px; text-align: center;
-    border: 2px solid #30303c;
+    border: 3px solid #30303c;
     box-shadow: 0 6px 18px rgba(0,0,0,.28);
   }
-  .card .name { font-size: 26px; font-weight: 700; margin-bottom: 6px; word-break: break-word; }
+  .color-dot {
+    position: absolute; top: 12px; right: 12px;
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.45); cursor: pointer; padding: 0;
+  }
+  .card .name { font-size: 32px; font-weight: 800; margin-bottom: 6px; word-break: break-word; padding: 0 18px; }
   .card .time {
-    font-size: 58px; font-weight: 800;
+    font-size: 58px; font-weight: 800; color: #fff;
     font-variant-numeric: tabular-nums; line-height: 1.1;
     margin: 4px 0 6px;
   }
-  .card .clock {
-    font-size: 16px; font-weight: 600; color: #aeaebc;
-    margin-bottom: 12px;
-  }
-  .card .clock b { color: #ff9b3d; }
-  .card .temp {
-    font-size: 22px; font-weight: 700; color: #ff9b3d;
-    margin-bottom: 18px;
-  }
+  .card .clock { font-size: 16px; font-weight: 600; color: #aeaebc; margin-bottom: 12px; }
+  .card .temp { font-size: 22px; font-weight: 700; margin-bottom: 18px; }
   .card .temp.none { color: #62626f; font-weight: 600; font-size: 16px; margin-bottom: 18px; }
-  .card.ringing { border-color: #ff4d4d; animation: flash .7s infinite; }
+  .card.ringing { animation: flash .7s infinite; }
   @keyframes flash { 0%,100% { background: #262630; } 50% { background: #6b1414; } }
-  .card.done { opacity: .65; }
+  .card.done { opacity: .6; }
 
   .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
   .btn { border: none; border-radius: 12px; font-size: 19px; font-weight: 700; padding: 14px 18px; cursor: pointer; flex: 1; min-width: 90px; color: #fff; }
@@ -92,8 +125,8 @@
 
   .empty { text-align: center; color: #7a7a86; padding: 60px 20px; font-size: 19px; }
 
-  /* ---------- modal ---------- */
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
+  /* ---------- modals ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: center; justify-content: center; z-index: 30; padding: 16px; }
   .overlay.show { display: flex; }
   .modal { background: #262630; border-radius: 22px; padding: 26px; width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }
   .modal h2 { margin: 0 0 6px; font-size: 24px; text-align: center; }
@@ -106,8 +139,14 @@
   }
   .modal .actions { display: flex; gap: 12px; margin-top: 6px; }
 
+  .swatches { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 4px 0 20px; }
+  .swatch { width: 42px; height: 42px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
+  .swatch.sel { border-color: #fff; transform: scale(1.08); }
+
   @media (max-width: 600px) {
-    .rest-name { font-size: 22px; }
+    header { padding: 14px 60px 12px; }
+    .rest-name { font-size: 24px; }
+    .subtitle { font-size: 14px; letter-spacing: 1.5px; }
     .add-btn { font-size: 15px; padding: 10px 14px; }
     .rule { font-size: 12px; }
   }
@@ -116,6 +155,9 @@
 <body>
 
 <header>
+  <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
   <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
   <div class="subtitle">Time / Temp Control Log</div>
   <div class="meta-row">
@@ -130,6 +172,24 @@
 <div id="timers"></div>
 <div class="empty" id="empty">No timers yet.<br>Tap <b>+ Add Food</b> to start one.</div>
 
+<!-- menu -->
+<div class="menu-backdrop" id="menuBackdrop" onclick="closeMenu()"></div>
+<div class="menu-panel" id="menuPanel">
+  <div class="menu-row" onclick="toggleAutoReset(event)">
+    <div><div class="menu-title">Auto-reset</div><div class="menu-sub">STOP restarts the card to 4:00:00</div></div>
+    <span class="switch" id="swAutoReset">OFF</span>
+  </div>
+  <div class="menu-row" onclick="toggleSound(event)">
+    <div><div class="menu-title">Sound</div><div class="menu-sub">Alarm beep on this device</div></div>
+    <span class="switch" id="swSound">ON</span>
+  </div>
+  <div class="menu-row" onclick="menuTestSound()"><span>🔊 Test sound</span></div>
+  <div class="menu-row" onclick="menuFullscreen()"><span id="fsLabel">⛶ Fullscreen</span></div>
+  <div class="menu-divider"></div>
+  <div class="menu-row" onclick="menuDeleteFinished()"><span>Delete finished</span></div>
+  <div class="menu-row danger" onclick="menuClearAll()"><span>Clear all cards</span></div>
+</div>
+
 <!-- Add Food modal -->
 <div class="overlay" id="overlay">
   <div class="modal">
@@ -141,6 +201,9 @@
     <label>Start temp °F <small style="color:#888">(optional)</small></label>
     <input type="number" id="foodTemp" inputmode="numeric" placeholder="e.g. 165">
 
+    <label>Card color</label>
+    <div class="swatches" id="addSwatchRow"></div>
+
     <div class="actions">
       <button class="btn gray" onclick="closeAdd()">Cancel</button>
       <button class="btn green" onclick="startTimer()">Start 4h Timer</button>
@@ -148,15 +211,44 @@
   </div>
 </div>
 
+<!-- Card color picker -->
+<div class="overlay" id="colorOverlay">
+  <div class="modal">
+    <h2>Card color</h2>
+    <div class="swatches" id="cardSwatchRow"></div>
+    <div class="actions"><button class="btn gray" onclick="closeColor()">Close</button></div>
+  </div>
+</div>
+
 <script>
+/* ---------- colors ---------- */
+const COLORS = {
+  slate:  { bg: '#2b2b36', bd: '#5a5a6a', name: '#d4d4e2' },
+  red:    { bg: '#412022', bd: '#d24a43', name: '#ff8a82' },
+  orange: { bg: '#43311c', bd: '#e08a2e', name: '#ffb364' },
+  yellow: { bg: '#41401e', bd: '#d8c037', name: '#f2dd5e' },
+  green:  { bg: '#1e3a28', bd: '#3fa05a', name: '#6fd98c' },
+  teal:   { bg: '#163a3a', bd: '#2f9c9c', name: '#5fd0d0' },
+  blue:   { bg: '#1e3247', bd: '#4a86d8', name: '#7cb0f2' },
+  purple: { bg: '#342544', bd: '#9a5ad0', name: '#c490f2' },
+  pink:   { bg: '#412038', bd: '#d85aa0', name: '#f58ac4' }
+};
+const COLOR_ORDER = ['slate','red','orange','yellow','green','teal','blue','purple','pink'];
+function colorOf(t) { return COLORS[t && t.color] || COLORS.slate; }
+
 /* ---------- state ---------- */
-let timers = [];   // {id,name,total,remaining,state:'running'|'ringing'|'done',startAt,endAt,temp}
-const FOUR_HOURS = 4 * 3600;   // seconds — every timer is fixed at 4 hours
+let timers = [];   // {id,name,total,remaining,state:'running'|'ringing'|'done',startAt,endAt,temp,color}
+let settings = { autoReset: false, sound: true };
+let addColor = 'slate';
+let colorEditId = null;
+let menuOpen = false;
+const FOUR_HOURS = 4 * 3600;
 
 const $ = id => document.getElementById(id);
 const STORE = 'kitchenTimersV4';
 const NAME_STORE = 'kitchenRestName';
-const timeEls = new Map();   // id -> .time element (so countdown updates don't rebuild buttons)
+const SET_STORE = 'kitchenSettings';
+const timeEls = new Map();
 
 /* ---------- persistence ---------- */
 function save() { try { localStorage.setItem(STORE, JSON.stringify(timers)); } catch (e) {} }
@@ -165,6 +257,7 @@ function load() {
     const data = JSON.parse(localStorage.getItem(STORE) || '[]');
     const now = Date.now();
     data.forEach(t => {
+      if (!t.color) t.color = 'slate';
       if (t.state === 'running' && t.endAt) {
         t.remaining = Math.max(0, Math.round((t.endAt - now) / 1000));
         if (t.remaining === 0) t.state = 'ringing';
@@ -173,14 +266,32 @@ function load() {
     timers = data;
   } catch (e) { timers = []; }
 }
-
-/* ---------- restaurant name ---------- */
 function loadName() { try { $('restName').value = localStorage.getItem(NAME_STORE) || ''; } catch (e) {} }
 function saveName() { try { localStorage.setItem(NAME_STORE, $('restName').value); } catch (e) {} }
+function loadSettings() {
+  try { const s = JSON.parse(localStorage.getItem(SET_STORE) || '{}');
+    settings.autoReset = !!s.autoReset; settings.sound = s.sound !== false; } catch (e) {}
+}
+function saveSettings() { try { localStorage.setItem(SET_STORE, JSON.stringify(settings)); } catch (e) {} }
+
+/* ---------- swatches ---------- */
+function buildSwatches(containerId, selected, onPick) {
+  const c = $(containerId); if (!c) return;
+  c.innerHTML = '';
+  COLOR_ORDER.forEach(key => {
+    const b = document.createElement('button');
+    b.className = 'swatch' + (key === selected ? ' sel' : '');
+    b.style.background = COLORS[key].bd;
+    b.onclick = function (ev) { ev.stopPropagation(); onPick(key); };
+    c.appendChild(b);
+  });
+}
 
 /* ---------- add modal ---------- */
+function pickAddColor(key) { addColor = key; buildSwatches('addSwatchRow', addColor, pickAddColor); }
 function openAdd() {
   $('foodName').value = ''; $('foodTemp').value = '';
+  addColor = 'slate'; buildSwatches('addSwatchRow', addColor, pickAddColor);
   $('overlay').classList.add('show'); unlockAudio();
   setTimeout(() => $('foodName').focus(), 50);
 }
@@ -194,19 +305,43 @@ function startTimer() {
   timers.push({
     id: uid(), name, total, remaining: total, state: 'running',
     startAt: now, endAt: now + total * 1000,
-    temp: (temp != null && !isNaN(temp)) ? temp : null
+    temp: (temp != null && !isNaN(temp)) ? temp : null,
+    color: addColor
   });
   save(); render(); closeAdd();
 }
 
-/* ---------- controls (no pause) ---------- */
+/* ---------- card color picker ---------- */
+function openColor(id, e) {
+  if (e) e.stopPropagation();
+  colorEditId = id;
+  const cur = (timers.find(x => x.id === id) || {}).color || 'slate';
+  buildSwatches('cardSwatchRow', cur, function (key) {
+    const t = timers.find(x => x.id === colorEditId);
+    if (t) { t.color = key; save(); render(); }
+    closeColor();
+  });
+  $('colorOverlay').classList.add('show');
+}
+function closeColor() { $('colorOverlay').classList.remove('show'); }
+
+/* ---------- controls ---------- */
 function restart(id) {
   const t = timers.find(x => x.id === id); if (!t) return;
   const now = Date.now();
   t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000; t.state = 'running';
   save(); render();
 }
-function stopRing(id) { const t = timers.find(x => x.id === id); if (!t) return; t.state = 'done'; t.remaining = 0; save(); render(); }
+function stopRing(id) {
+  const t = timers.find(x => x.id === id); if (!t) return;
+  if (settings.autoReset) {
+    const now = Date.now();
+    t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000; t.state = 'running';
+  } else {
+    t.state = 'done'; t.remaining = 0;
+  }
+  save(); render();
+}
 function del(id) { timers = timers.filter(x => x.id !== id); save(); render(); }
 
 /* ---------- formatting ---------- */
@@ -224,24 +359,33 @@ function clock(ms) {
   return `${h}:${String(m).padStart(2, '0')} ${ap}`;
 }
 
-/* ---------- render (full rebuild on changes only) ---------- */
+/* ---------- render (auto-sorted: soonest to discard on top) ---------- */
 function render() {
   const wrap = $('timers'); timeEls.clear();
   $('empty').style.display = timers.length ? 'none' : 'block';
+  const rank = t => t.state === 'ringing' ? 0 : (t.state === 'done' ? 2 : 1);
+  const order = timers.slice().sort((a, b) => {
+    if (rank(a) !== rank(b)) return rank(a) - rank(b);
+    return a.endAt - b.endAt;
+  });
   wrap.innerHTML = '';
-  timers.forEach(t => {
+  order.forEach(t => {
+    const col = colorOf(t);
     const card = document.createElement('div');
     card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '');
+    if (t.state === 'ringing') { card.style.borderColor = '#ff4d4d'; }
+    else { card.style.background = col.bg; card.style.borderColor = col.bd; }
     let controls;
     if (t.state === 'ringing') controls = `<button class="btn stop" onclick="stopRing('${t.id}')">STOP</button>`;
     else if (t.state === 'done') controls = `<div class="row"><button class="btn green" onclick="restart('${t.id}')">Start Again</button><button class="btn gray" onclick="del('${t.id}')">Delete</button></div>`;
     else controls = `<div class="row"><button class="btn gray" onclick="restart('${t.id}')">Reset</button><button class="btn red" onclick="del('${t.id}')">Delete</button></div>`;
     const label = t.state === 'ringing' ? 'DONE!' : (t.state === 'done' ? 'Done' : fmt(t.remaining));
-    const clockLine = `<div class="clock">Start ${clock(t.startAt)} · <b>End ${clock(t.endAt)}</b></div>`;
+    const clockLine = `<div class="clock">Start ${clock(t.startAt)} · <b style="color:${col.name}">End ${clock(t.endAt)}</b></div>`;
     const tempLine = (t.temp != null)
-      ? `<div class="temp">🌡️ Start temp ${t.temp}°F</div>`
+      ? `<div class="temp" style="color:${col.name}">🌡️ Start temp ${t.temp}°F</div>`
       : `<div class="temp none">no temp set</div>`;
-    card.innerHTML = `<div class="name">${esc(t.name)}</div><div class="time">${label}</div>${clockLine}${tempLine}${controls}`;
+    const dot = `<button class="color-dot" style="background:${col.bd}" onclick="openColor('${t.id}',event)" aria-label="Change color"></button>`;
+    card.innerHTML = `${dot}<div class="name" style="color:${col.name}">${esc(t.name)}</div><div class="time">${label}</div>${clockLine}${tempLine}${controls}`;
     wrap.appendChild(card);
     timeEls.set(t.id, card.querySelector('.time'));
   });
@@ -249,7 +393,7 @@ function render() {
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function uid() { return Date.now().toString(36) + '-' + Math.floor(performance.now()).toString(36) + '-' + (uid._n = (uid._n || 0) + 1); }
 
-/* ---------- tick (updates numbers only, never rebuilds buttons mid-countdown) ---------- */
+/* ---------- tick ---------- */
 setInterval(() => {
   const now = Date.now();
   timers.forEach(t => {
@@ -262,13 +406,14 @@ setInterval(() => {
   timers.some(t => t.state === 'ringing') ? startAlarm() : stopAlarm();
 }, 250);
 
-/* ---------- alarm (loops until stopped) ---------- */
+/* ---------- alarm ---------- */
 let audioCtx = null, alarmTimer = null;
 function unlockAudio() {
   if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }
-function beep() {
+function beep(force) {
+  if (!settings.sound && !force) return;
   if (!audioCtx) { unlockAudio(); }
   if (!audioCtx) return;
   const resume = audioCtx.state === 'suspended' ? audioCtx.resume() : Promise.resolve();
@@ -286,14 +431,38 @@ function beep() {
 function startAlarm() { unlockAudio(); if (alarmTimer) return; beep(); alarmTimer = setInterval(beep, 700); }
 function stopAlarm() { if (alarmTimer) { clearInterval(alarmTimer); alarmTimer = null; } }
 
+/* ---------- menu ---------- */
+function toggleMenu(e) { if (e) e.stopPropagation(); unlockAudio(); menuOpen ? closeMenu() : openMenu(); }
+function openMenu() { menuOpen = true; updateMenu(); $('menuPanel').classList.add('show'); $('menuBackdrop').classList.add('show'); }
+function closeMenu() { menuOpen = false; $('menuPanel').classList.remove('show'); $('menuBackdrop').classList.remove('show'); }
+function updateMenu() {
+  const a = $('swAutoReset'); a.textContent = settings.autoReset ? 'ON' : 'OFF'; a.className = 'switch' + (settings.autoReset ? ' on' : '');
+  const s = $('swSound'); s.textContent = settings.sound ? 'ON' : 'OFF'; s.className = 'switch' + (settings.sound ? ' on' : '');
+  $('fsLabel').textContent = document.fullscreenElement ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
+}
+function toggleAutoReset(e) { if (e) e.stopPropagation(); settings.autoReset = !settings.autoReset; saveSettings(); updateMenu(); }
+function toggleSound(e) { if (e) e.stopPropagation(); settings.sound = !settings.sound; saveSettings(); updateMenu(); }
+function menuTestSound() { unlockAudio(); beep(true); setTimeout(() => beep(true), 700); closeMenu(); }
+function menuFullscreen() {
+  try {
+    if (!document.fullscreenElement) { (document.documentElement.requestFullscreen || function(){})(); }
+    else { (document.exitFullscreen || function(){})(); }
+  } catch (e) {}
+  closeMenu();
+}
+function menuDeleteFinished() { timers = timers.filter(t => t.state !== 'done'); save(); render(); closeMenu(); }
+function menuClearAll() { if (timers.length && confirm('Delete ALL food cards? This cannot be undone.')) { timers = []; save(); render(); } closeMenu(); }
+
+/* ---------- listeners ---------- */
 document.body.addEventListener('touchstart', unlockAudio);
 document.body.addEventListener('click', unlockAudio);
 $('restName').addEventListener('input', saveName);
 $('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 $('foodTemp').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
+document.addEventListener('fullscreenchange', () => { if (menuOpen) updateMenu(); });
 
 /* ---------- boot ---------- */
-loadName(); load(); render();
+loadSettings(); loadName(); load(); render();
 if (timers.some(t => t.state === 'ringing')) startAlarm();
 </script>
 </body>
