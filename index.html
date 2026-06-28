@@ -505,8 +505,13 @@ function menuTestSound() {
   closeMenu();
   if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
   if (!audioCtx) return;
-  const go = () => { beep(true); setTimeout(() => beep(true), 700); };
-  if (audioCtx.state === 'suspended') audioCtx.resume().then(go); else go();
+  // Play a silent buffer synchronously to unlock iOS AudioContext within the gesture
+  try {
+    const buf = audioCtx.createBuffer(1, 1, 22050);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.connect(audioCtx.destination); src.start(0);
+  } catch(e) {}
+  audioCtx.resume().then(() => { beep(true); setTimeout(() => beep(true), 700); });
 }
 function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function menuFullscreen() {
