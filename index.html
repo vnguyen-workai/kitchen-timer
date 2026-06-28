@@ -10,181 +10,198 @@
 <title>Time / Temp Control Log</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root { --scale: 1; }
   html, body {
     margin: 0; padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: #16161c; color: #fff;
+    background: #f3f5f8; color: #1f2733;
     -webkit-user-select: none; user-select: none;
   }
+  .ic { width: 1em; height: 1em; vertical-align: -0.13em; }
 
   /* ---------- header ---------- */
-  header {
-    position: relative;
-    text-align: center;
-    padding: 16px 64px 14px;
-    background: #20202a;
-    border-bottom: 1px solid #2e2e3a;
-  }
+  header { background: #fff; padding: 20px 24px 16px; border-bottom: 1px solid #e5e7eb; }
+  .head-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+  .head-left { min-width: 0; flex: 1; }
   .rest-name {
-    display: block; width: 100%; max-width: 720px; margin: 0 auto;
-    font-size: 46px; font-weight: 800; text-align: center; letter-spacing: .3px;
-    background: transparent; color: #fff;
-    border: none; border-radius: 10px; padding: 2px 8px;
+    display: block; width: 100%; max-width: 560px;
+    font-size: 30px; font-weight: 800; letter-spacing: -.3px;
+    background: transparent; color: #111827; border: none; border-radius: 8px;
+    padding: 2px 6px; margin: 0 0 0 -6px;
   }
-  .rest-name::placeholder { color: #565664; font-weight: 700; }
-  .rest-name:focus { outline: none; background: #16161c; box-shadow: 0 0 0 2px #f5a623; }
-  .subtitle {
-    margin-top: 4px;
-    font-size: 22px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
-    color: #f5a623;
-  }
-  .meta-row {
-    margin-top: 10px;
-    display: flex; align-items: center; justify-content: space-between; gap: 14px;
-    text-align: left;
-  }
-  .rule { font-size: 13px; font-style: italic; color: #9a9aa8; line-height: 1.45; }
+  .rest-name::placeholder { color: #c0c5cd; }
+  .rest-name:focus { outline: none; background: #f3f5f8; }
+  .subtitle { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #2563eb; margin-top: 2px; }
+  .head-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .add-btn {
-    flex-shrink: 0;
-    background: #f5a623; color: #16161c;
-    border: none; border-radius: 12px;
-    font-size: 16px; font-weight: 800;
-    padding: 11px 16px; cursor: pointer;
+    background: #2563eb; color: #fff; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700; padding: 13px 20px; cursor: pointer; white-space: nowrap;
   }
-  .add-btn:active { transform: scale(.96); }
-
-  /* ---------- hamburger menu button ---------- */
+  .add-btn:active { transform: scale(.97); }
   .menu-btn {
-    position: absolute; top: 14px; right: 14px;
-    width: 46px; height: 46px;
-    background: #2e2e3a; border: 1px solid #3a3a46; border-radius: 12px;
-    cursor: pointer; padding: 0;
-    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+    width: 48px; height: 48px; background: #1f2733; border: none; border-radius: 12px;
+    cursor: pointer; padding: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; flex-shrink: 0;
   }
   .menu-btn:active { transform: scale(.95); }
-  .menu-btn span { display: block; width: 22px; height: 2.5px; background: #fff; border-radius: 2px; }
+  .menu-btn span { display: block; width: 20px; height: 2.5px; background: #fff; border-radius: 2px; }
+  .rules { display: flex; align-items: center; gap: 14px; margin-top: 12px; color: #6b7280; font-size: 14px; flex-wrap: wrap; }
+  .rule { display: inline-flex; align-items: center; gap: 7px; }
+  .rule .ic { font-size: 17px; color: #9ca3af; }
+  .rule-div { width: 1px; height: 16px; background: #d8dde3; }
 
-  .menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; z-index: 20; }
-  .menu-backdrop.show { display: block; }
-  .menu-panel {
-    position: fixed; top: 66px; right: 12px; width: 268px; max-width: calc(100vw - 24px);
-    background: #2e2e3a; border: 1px solid #3a3a46; border-radius: 16px;
-    box-shadow: 0 14px 34px rgba(0,0,0,.55); z-index: 21; display: none; overflow: hidden;
+  /* ---------- toolbar ---------- */
+  .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px 4px; gap: 12px; }
+  .count { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #8a93a0; }
+  .sortwrap { font-size: 14px; color: #6b7280; display: inline-flex; align-items: center; gap: 6px; }
+  .sortwrap select {
+    -webkit-appearance: none; appearance: none; border: none; background: transparent;
+    color: #2563eb; font-weight: 700; font-size: 14px; cursor: pointer; padding-right: 16px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right center;
   }
-  .menu-panel.show { display: block; }
-  .menu-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    padding: 14px 16px; font-size: 17px; font-weight: 600; color: #fff; cursor: pointer;
-  }
-  .menu-row:active { background: #34343f; }
-  .menu-title { font-size: 17px; font-weight: 700; }
-  .menu-sub { font-size: 12px; color: #9a9aa8; font-weight: 500; margin-top: 2px; }
-  .menu-divider { height: 1px; background: #3a3a46; margin: 4px 0; }
-  .menu-row.danger { color: #ff6b63; }
-  .switch {
-    font-size: 13px; font-weight: 800; padding: 6px 0; width: 52px; text-align: center;
-    border-radius: 999px; background: #4a4a59; color: #cfcfda; flex-shrink: 0;
-  }
-  .switch.on { background: #2ecc71; color: #06301a; }
-  .seg { display: flex; gap: 6px; flex-shrink: 0; }
-  .seg button { width: 40px; padding: 8px 0; border: none; border-radius: 9px; background: #43434f; color: #cfcfda; font-size: 14px; font-weight: 800; cursor: pointer; }
-  .seg button.on { background: #f5a623; color: #16161c; }
 
-  /* ---------- timer cards ---------- */
-  #timers {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px; padding: 18px;
-    max-width: 1100px; margin: 0 auto;
-  }
+  /* ---------- cards ---------- */
+  #timers { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding: 16px 24px; }
   .card {
-    position: relative;
-    display: flex; flex-direction: column; justify-content: center;
-    background: #262630; border-radius: 20px;
-    padding: calc(18px * var(--scale,1)) 18px; text-align: center;
-    border: 3px solid #30303c;
-    box-shadow: 0 6px 18px rgba(0,0,0,.28);
+    position: relative; display: flex; flex-direction: column;
+    background: #fff; border: 1.5px solid #e5e7eb; border-radius: 16px;
+    padding: calc(18px * var(--scale)) calc(18px * var(--scale));
+    box-shadow: 0 1px 3px rgba(16,24,40,.06);
   }
-  .color-dot {
-    position: absolute; top: 10px; right: 10px;
-    width: 22px; height: 22px; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,.45); cursor: pointer; padding: 0;
-  }
-  .card .name { font-size: calc(30px * var(--scale,1)); font-weight: 800; margin-bottom: calc(5px * var(--scale,1)); word-break: break-word; padding: 0 14px; }
-  .card .time {
-    font-size: calc(56px * var(--scale,1)); font-weight: 800; color: #fff;
-    font-variant-numeric: tabular-nums; line-height: 1.08;
-    margin: calc(3px * var(--scale,1)) 0 calc(5px * var(--scale,1));
-  }
-  .card .clock { font-size: calc(15px * var(--scale,1)); font-weight: 600; color: #aeaebc; margin-bottom: calc(10px * var(--scale,1)); }
-  .card .temp { font-size: calc(21px * var(--scale,1)); font-weight: 700; margin-bottom: calc(14px * var(--scale,1)); }
-  .card .temp.none { color: #62626f; font-weight: 600; font-size: calc(15px * var(--scale,1)); margin-bottom: calc(14px * var(--scale,1)); }
-  .card.ringing { animation: flash .7s infinite; }
-  @keyframes flash { 0%,100% { background: #262630; } 50% { background: #6b1414; } }
-  .card.done { opacity: .6; }
+  .kebab { position: absolute; top: 12px; right: 10px; width: 30px; height: 30px; border: none; background: transparent; color: #9aa1ab; font-size: 22px; line-height: 1; cursor: pointer; border-radius: 8px; }
+  .kebab:active { background: #f0f2f5; }
+  .cname { font-size: calc(19px * var(--scale)); font-weight: 800; color: #111827; padding-right: 28px; word-break: break-word; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: calc(11px * var(--scale)); font-weight: 800; letter-spacing: .5px; margin-top: 7px; }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .badge.safe { color: #16a34a; } .badge.safe .dot { background: #16a34a; }
+  .badge.discard { color: #dc2626; } .badge.discard .dot { background: #dc2626; }
+  .badge.done { color: #6b7280; } .badge.done .dot { background: #9ca3af; }
+  .ctime { font-size: calc(40px * var(--scale)); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(6px * var(--scale)) 0 calc(10px * var(--scale)); letter-spacing: -1px; }
+  .pbar { height: calc(7px * var(--scale)); background: #eceff3; border-radius: 99px; overflow: hidden; }
+  .pfill { height: 100%; border-radius: 99px; transition: width .3s linear; }
+  .cfoot { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: calc(14px * var(--scale)); }
+  .finfo { display: flex; gap: calc(16px * var(--scale)); flex-wrap: wrap; }
+  .fcol { display: flex; flex-direction: column; gap: 2px; }
+  .flabel { font-size: calc(11px * var(--scale)); color: #9aa1ab; font-weight: 600; }
+  .fval { font-size: calc(14px * var(--scale)); font-weight: 700; color: #374151; white-space: nowrap; }
+  .fval.blue { color: #2563eb; }
+  .act { border-radius: 10px; font-size: calc(13px * var(--scale)); font-weight: 700; cursor: pointer; padding: calc(9px * var(--scale)) calc(12px * var(--scale)); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
+  .act .ic { font-size: calc(15px * var(--scale)); }
+  .act.reset { background: #fff; color: #374151; border: 1.5px solid #d7dce2; }
+  .act.again { background: #2563eb; color: #fff; border: none; }
+  .act.stop { background: #dc2626; color: #fff; border: none; font-size: calc(15px * var(--scale)); padding: calc(11px * var(--scale)) calc(20px * var(--scale)); }
+  .act:active { transform: scale(.96); }
+  .card.ringing { border-color: #f3a8a3; animation: flash .8s infinite; }
+  @keyframes flash { 0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } 50% { box-shadow: 0 0 0 4px rgba(220,38,38,.25); } }
+  .card.done { opacity: .72; }
 
-  .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-  .btn { border: none; border-radius: 12px; font-size: calc(18px * var(--scale,1)); font-weight: 700; padding: calc(13px * var(--scale,1)) 8px; cursor: pointer; flex: 1; min-width: 0; color: #fff; white-space: nowrap; }
-  .btn:active { transform: scale(.96); }
-  .btn.green { background: #2ecc71; color: #06301a; }
-  .btn.gray  { background: #43434f; }
-  .btn.red   { background: #ff4d4d; }
-  .btn.stop  { background: #ff4d4d; font-size: calc(26px * var(--scale,1)); padding: calc(18px * var(--scale,1)); }
+  .empty { text-align: center; color: #9aa1ab; padding: 60px 20px; font-size: 18px; }
 
-  .empty { text-align: center; color: #7a7a86; padding: 60px 20px; font-size: 19px; }
+  /* ---------- footer banner ---------- */
+  .footer-banner { display: flex; align-items: center; gap: 14px; margin: 8px 24px 28px; padding: 16px 18px; background: #eff5ff; border: 1px solid #dbe7fe; border-radius: 14px; }
+  .fb-icon { width: 34px; height: 34px; flex-shrink: 0; background: #2563eb; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-style: italic; font-size: 18px; font-family: Georgia, serif; }
+  .fb-text { font-size: 14px; color: #3b4655; line-height: 1.5; }
+
+  /* ---------- menu ---------- */
+  .menu-backdrop { position: fixed; inset: 0; background: rgba(17,24,39,.12); display: none; z-index: 20; }
+  .menu-backdrop.show { display: block; }
+  .menu-panel { position: fixed; top: 78px; right: 16px; width: 280px; max-width: calc(100vw - 24px); background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; box-shadow: 0 16px 40px rgba(16,24,40,.18); z-index: 21; display: none; overflow: hidden; }
+  .menu-panel.show { display: block; }
+  .menu-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; font-size: 16px; font-weight: 600; color: #1f2733; cursor: pointer; }
+  .menu-row:active { background: #f3f5f8; }
+  .menu-title { font-size: 16px; font-weight: 700; }
+  .menu-sub { font-size: 12px; color: #8a93a0; font-weight: 500; margin-top: 2px; }
+  .menu-divider { height: 1px; background: #eceff3; margin: 4px 0; }
+  .menu-row.danger { color: #dc2626; }
+  .switch { font-size: 13px; font-weight: 800; padding: 6px 0; width: 52px; text-align: center; border-radius: 999px; background: #e5e8ec; color: #8a93a0; flex-shrink: 0; }
+  .switch.on { background: #16a34a; color: #fff; }
+  .seg { display: flex; gap: 6px; flex-shrink: 0; }
+  .seg button { width: 40px; padding: 8px 0; border: none; border-radius: 9px; background: #e5e8ec; color: #6b7280; font-size: 14px; font-weight: 800; cursor: pointer; }
+  .seg button.on { background: #2563eb; color: #fff; }
 
   /* ---------- modals ---------- */
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: center; justify-content: center; z-index: 30; padding: 16px; }
+  .overlay { position: fixed; inset: 0; background: rgba(17,24,39,.45); display: none; align-items: center; justify-content: center; z-index: 30; padding: 16px; }
   .overlay.show { display: flex; }
-  .modal { background: #262630; border-radius: 22px; padding: 26px; width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }
-  .modal h2 { margin: 0 0 6px; font-size: 24px; text-align: center; }
-  .modal .fixed-note { text-align: center; color: #9a9aa8; font-size: 16px; margin: 0 0 20px; }
-  .modal .fixed-note b { color: #2ecc71; }
-  .modal label { font-size: 17px; color: #bbb; display: block; margin-bottom: 8px; }
+  .modal { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(16,24,40,.25); }
+  .modal h2 { margin: 0 0 6px; font-size: 22px; text-align: center; color: #111827; }
+  .modal .fixed-note { text-align: center; color: #8a93a0; font-size: 15px; margin: 0 0 18px; }
+  .modal .fixed-note b { color: #16a34a; }
+  .modal label { font-size: 15px; color: #6b7280; font-weight: 600; display: block; margin-bottom: 7px; }
   .modal input[type=text], .modal input[type=number] {
-    width: 100%; font-size: 24px; padding: 14px; border-radius: 12px; border: none;
-    margin-bottom: 18px; background: #16161c; color: #fff;
+    width: 100%; font-size: 20px; padding: 13px 14px; border-radius: 12px; border: 1.5px solid #dfe3e8;
+    margin-bottom: 16px; background: #fff; color: #111827;
   }
+  .modal input:focus { outline: none; border-color: #2563eb; }
   .modal .actions { display: flex; gap: 12px; margin-top: 6px; }
-
-  .swatches { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 4px 0 20px; }
-  .swatch { width: 42px; height: 42px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
-  .swatch.sel { border-color: #fff; transform: scale(1.08); }
+  .btn { border: none; border-radius: 12px; font-size: 17px; font-weight: 700; padding: 14px 16px; cursor: pointer; flex: 1; }
+  .btn:active { transform: scale(.97); }
+  .btn.blue { background: #2563eb; color: #fff; }
+  .btn.ghost { background: #f1f3f6; color: #374151; }
+  .btn.danger { background: #fee2e2; color: #dc2626; }
+  .btn.light { background: #f1f3f6; color: #1f2733; }
+  .actions-col { display: flex; flex-direction: column; gap: 10px; }
+  .actions-col .btn { flex: none; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 4px 0 18px; }
+  .swatch { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+  .swatch.sel { border-color: #1f2733; transform: scale(1.08); }
 
   @media (max-width: 600px) {
-    header { padding: 14px 60px 12px; }
-    .rest-name { font-size: 24px; }
-    .subtitle { font-size: 14px; letter-spacing: 1.5px; }
-    .add-btn { font-size: 15px; padding: 10px 14px; }
-    .rule { font-size: 12px; }
+    header { padding: 16px 16px 14px; }
+    .head-top { flex-wrap: wrap; }
+    .head-left { flex-basis: 100%; }
+    .head-actions { margin-left: auto; margin-top: 6px; }
+    .rest-name { font-size: 26px; }
+    .toolbar { padding: 14px 16px 2px; }
+    #timers { padding: 14px 16px; }
+    .footer-banner { margin: 8px 16px 24px; }
+    .add-btn { font-size: 15px; padding: 12px 15px; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-  <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
-  <div class="subtitle">Time / Temp Control Log</div>
-  <div class="meta-row">
-    <div class="rules">
-      <div class="rule">Temp not to exceed 70&deg;F</div>
-      <div class="rule">Discard after 4 hours</div>
+  <div class="head-top">
+    <div class="head-left">
+      <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
+      <div class="subtitle">TIME / TEMP CONTROL LOG</div>
     </div>
-    <button class="add-btn" onclick="openAdd()">+ Add Food</button>
+    <div class="head-actions">
+      <button class="add-btn" onclick="openAdd()">+ Add Food</button>
+      <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="rules">
+    <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>Temp must not exceed 70&deg;F</span>
+    <span class="rule-div"></span>
+    <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Discard after 4 hours</span>
   </div>
 </header>
 
+<div class="toolbar">
+  <div class="count" id="itemCount">0 ITEMS</div>
+  <span class="sortwrap">Sort by:
+    <select id="sortSel" onchange="setSort(this.value)">
+      <option value="soonest">Soonest</option>
+      <option value="newest">Newest</option>
+      <option value="name">Name</option>
+    </select>
+  </span>
+</div>
+
 <div id="timers"></div>
-<div class="empty" id="empty">No timers yet.<br>Tap <b>+ Add Food</b> to start one.</div>
+<div class="empty" id="empty">No items yet. Tap <b>+ Add Food</b> to start one.</div>
+
+<div class="footer-banner">
+  <div class="fb-icon">i</div>
+  <div class="fb-text">Make sure all items are properly labeled with the start time and temperature.<br>Discard any food after 4 hours.</div>
+</div>
 
 <!-- menu -->
 <div class="menu-backdrop" id="menuBackdrop" onclick="closeMenu()"></div>
 <div class="menu-panel" id="menuPanel">
   <div class="menu-row" onclick="toggleAutoReset(event)">
-    <div><div class="menu-title">Auto-reset</div><div class="menu-sub">STOP restarts the card to 4:00:00</div></div>
+    <div><div class="menu-title">Auto-reset</div><div class="menu-sub">Stop restarts the card to 4:00:00</div></div>
     <span class="switch" id="swAutoReset">OFF</span>
   </div>
   <div class="menu-row" onclick="toggleSound(event)">
@@ -212,17 +229,14 @@
     <h2>Add Food</h2>
     <p class="fixed-note">Timer is fixed at <b>4 hours</b></p>
     <label>Food name</label>
-    <input type="text" id="foodName" placeholder="e.g. Meat, Veggie, Crab" autocomplete="off">
-
-    <label>Start temp °F <small style="color:#888">(optional)</small></label>
-    <input type="number" id="foodTemp" inputmode="numeric" placeholder="e.g. 165">
-
+    <input type="text" id="foodName" placeholder="e.g. Beef, Crab, Chicken" autocomplete="off">
+    <label>Start temp °F <small style="color:#9aa1ab">(optional)</small></label>
+    <input type="number" id="foodTemp" inputmode="numeric" placeholder="e.g. 30">
     <label>Card color</label>
     <div class="swatches" id="addSwatchRow"></div>
-
     <div class="actions">
-      <button class="btn gray" onclick="closeAdd()">Cancel</button>
-      <button class="btn green" onclick="startTimer()">Start 4h Timer</button>
+      <button class="btn ghost" onclick="closeAdd()">Cancel</button>
+      <button class="btn blue" onclick="startTimer()">Start 4h Timer</button>
     </div>
   </div>
 </div>
@@ -232,31 +246,46 @@
   <div class="modal">
     <h2>Card color</h2>
     <div class="swatches" id="cardSwatchRow"></div>
-    <div class="actions"><button class="btn gray" onclick="closeColor()">Close</button></div>
+    <div class="actions"><button class="btn ghost" onclick="closeColor()">Close</button></div>
+  </div>
+</div>
+
+<!-- Card actions (kebab) -->
+<div class="overlay" id="cardMenuOverlay">
+  <div class="modal">
+    <h2 id="cardMenuTitle">Food</h2>
+    <div class="actions-col">
+      <button class="btn light" onclick="cardMenuColor()">🎨 Change color</button>
+      <button class="btn danger" onclick="cardMenuDelete()">Delete</button>
+      <button class="btn ghost" onclick="closeCardMenu()">Cancel</button>
+    </div>
   </div>
 </div>
 
 <script>
-/* ---------- colors ---------- */
+/* ---------- colors (light theme) ---------- */
 const COLORS = {
-  slate:  { bg: '#2b2b36', bd: '#5a5a6a', name: '#d4d4e2' },
-  red:    { bg: '#412022', bd: '#d24a43', name: '#ff8a82' },
-  orange: { bg: '#43311c', bd: '#e08a2e', name: '#ffb364' },
-  yellow: { bg: '#41401e', bd: '#d8c037', name: '#f2dd5e' },
-  green:  { bg: '#1e3a28', bd: '#3fa05a', name: '#6fd98c' },
-  teal:   { bg: '#163a3a', bd: '#2f9c9c', name: '#5fd0d0' },
-  blue:   { bg: '#1e3247', bd: '#4a86d8', name: '#7cb0f2' },
-  purple: { bg: '#342544', bd: '#9a5ad0', name: '#c490f2' },
-  pink:   { bg: '#412038', bd: '#d85aa0', name: '#f58ac4' }
+  slate:  { bg: '#ffffff', bd: '#e5e7eb', ac: '#475569' },
+  red:    { bg: '#fef2f2', bd: '#f6a8a3', ac: '#dc2626' },
+  orange: { bg: '#fff7ed', bd: '#fdba74', ac: '#ea580c' },
+  yellow: { bg: '#fefce8', bd: '#f2dd5e', ac: '#b8890a' },
+  green:  { bg: '#f0fdf4', bd: '#86efac', ac: '#16a34a' },
+  teal:   { bg: '#f0fdfa', bd: '#5eead4', ac: '#0d9488' },
+  blue:   { bg: '#eff6ff', bd: '#93c5fd', ac: '#2563eb' },
+  purple: { bg: '#faf5ff', bd: '#d8b4fe', ac: '#9333ea' },
+  pink:   { bg: '#fdf2f8', bd: '#f9a8d4', ac: '#db2777' }
 };
 const COLOR_ORDER = ['slate','red','orange','yellow','green','teal','blue','purple','pink'];
 function colorOf(t) { return COLORS[t && t.color] || COLORS.slate; }
 
+const ICON_RESET = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.5-6.2"/><path d="M3 4v5h5"/></svg>';
+
 /* ---------- state ---------- */
-let timers = [];   // {id,name,total,remaining,state:'running'|'ringing'|'done',startAt,endAt,temp,color}
-let settings = { autoReset: false, sound: true, perScreen: 6 };
+let timers = [];   // {id,name,total,remaining,state:'running'|'ringing'|'done',startAt,endAt,temp,color,created}
+let settings = { autoReset: false, sound: true, perScreen: 6, sort: 'soonest' };
 let addColor = 'slate';
 let colorEditId = null;
+let cardMenuId = null;
 let menuOpen = false;
 const FOUR_HOURS = 4 * 3600;
 
@@ -265,6 +294,7 @@ const STORE = 'kitchenTimersV4';
 const NAME_STORE = 'kitchenRestName';
 const SET_STORE = 'kitchenSettings';
 const timeEls = new Map();
+const barEls = new Map();
 
 /* ---------- persistence ---------- */
 function save() { try { localStorage.setItem(STORE, JSON.stringify(timers)); } catch (e) {} }
@@ -274,6 +304,7 @@ function load() {
     const now = Date.now();
     data.forEach(t => {
       if (!t.color) t.color = 'slate';
+      if (!t.created) t.created = t.startAt || now;
       if (t.state === 'running' && t.endAt) {
         t.remaining = Math.max(0, Math.round((t.endAt - now) / 1000));
         if (t.remaining === 0) t.state = 'ringing';
@@ -287,7 +318,9 @@ function saveName() { try { localStorage.setItem(NAME_STORE, $('restName').value
 function loadSettings() {
   try { const s = JSON.parse(localStorage.getItem(SET_STORE) || '{}');
     settings.autoReset = !!s.autoReset; settings.sound = s.sound !== false;
-    settings.perScreen = [6, 12, 18].indexOf(s.perScreen) >= 0 ? s.perScreen : 6; } catch (e) {}
+    settings.perScreen = [6, 12, 18].indexOf(s.perScreen) >= 0 ? s.perScreen : 6;
+    settings.sort = ['soonest', 'newest', 'name'].indexOf(s.sort) >= 0 ? s.sort : 'soonest';
+  } catch (e) {}
 }
 function saveSettings() { try { localStorage.setItem(SET_STORE, JSON.stringify(settings)); } catch (e) {} }
 
@@ -298,7 +331,7 @@ function buildSwatches(containerId, selected, onPick) {
   COLOR_ORDER.forEach(key => {
     const b = document.createElement('button');
     b.className = 'swatch' + (key === selected ? ' sel' : '');
-    b.style.background = COLORS[key].bd;
+    b.style.background = key === 'slate' ? '#cbd2da' : COLORS[key].ac;
     b.onclick = function (ev) { ev.stopPropagation(); onPick(key); };
     c.appendChild(b);
   });
@@ -321,14 +354,13 @@ function startTimer() {
   const now = Date.now();
   timers.push({
     id: uid(), name, total, remaining: total, state: 'running',
-    startAt: now, endAt: now + total * 1000,
-    temp: (temp != null && !isNaN(temp)) ? temp : null,
-    color: addColor
+    startAt: now, endAt: now + total * 1000, created: now,
+    temp: (temp != null && !isNaN(temp)) ? temp : null, color: addColor
   });
   save(); render(); closeAdd();
 }
 
-/* ---------- card color picker ---------- */
+/* ---------- card color + kebab ---------- */
 function openColor(id, e) {
   if (e) e.stopPropagation();
   colorEditId = id;
@@ -341,6 +373,16 @@ function openColor(id, e) {
   $('colorOverlay').classList.add('show');
 }
 function closeColor() { $('colorOverlay').classList.remove('show'); }
+function openCardMenu(id, e) {
+  if (e) e.stopPropagation();
+  cardMenuId = id;
+  const t = timers.find(x => x.id === id);
+  $('cardMenuTitle').textContent = t ? t.name : 'Food';
+  $('cardMenuOverlay').classList.add('show');
+}
+function closeCardMenu() { $('cardMenuOverlay').classList.remove('show'); }
+function cardMenuColor() { closeCardMenu(); openColor(cardMenuId); }
+function cardMenuDelete() { del(cardMenuId); closeCardMenu(); }
 
 /* ---------- controls ---------- */
 function restart(id) {
@@ -354,12 +396,11 @@ function stopRing(id) {
   if (settings.autoReset) {
     const now = Date.now();
     t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000; t.state = 'running';
-  } else {
-    t.state = 'done'; t.remaining = 0;
-  }
+  } else { t.state = 'done'; t.remaining = 0; }
   save(); render();
 }
 function del(id) { timers = timers.filter(x => x.id !== id); save(); render(); }
+function setSort(v) { settings.sort = v; saveSettings(); render(); }
 
 /* ---------- formatting ---------- */
 function fmt(s) {
@@ -375,36 +416,59 @@ function clock(ms) {
   h = h % 12; if (h === 0) h = 12;
   return `${h}:${String(m).padStart(2, '0')} ${ap}`;
 }
+function barColor(rem) { return rem > 1800 ? '#22c55e' : (rem > 600 ? '#f59e0b' : '#dc2626'); }
 
-/* ---------- render (auto-sorted: soonest to discard on top) ---------- */
+/* ---------- render ---------- */
 function render() {
-  const wrap = $('timers'); timeEls.clear();
+  const wrap = $('timers'); timeEls.clear(); barEls.clear();
   $('empty').style.display = timers.length ? 'none' : 'block';
+  $('itemCount').textContent = timers.length + (timers.length === 1 ? ' ITEM' : ' ITEMS');
   const rank = t => t.state === 'ringing' ? 0 : (t.state === 'done' ? 2 : 1);
+  const cmp = (a, b) => {
+    if (settings.sort === 'name') return a.name.localeCompare(b.name);
+    if (settings.sort === 'newest') return (b.created || 0) - (a.created || 0);
+    return a.endAt - b.endAt;
+  };
   const order = timers.slice().sort((a, b) => {
     if (rank(a) !== rank(b)) return rank(a) - rank(b);
-    return a.endAt - b.endAt;
+    return cmp(a, b);
   });
   wrap.innerHTML = '';
   order.forEach(t => {
     const col = colorOf(t);
     const card = document.createElement('div');
     card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '');
-    if (t.state === 'ringing') { card.style.borderColor = '#ff4d4d'; }
-    else { card.style.background = col.bg; card.style.borderColor = col.bd; }
-    let controls;
-    if (t.state === 'ringing') controls = `<button class="btn stop" onclick="stopRing('${t.id}')">STOP</button>`;
-    else if (t.state === 'done') controls = `<div class="row"><button class="btn green" onclick="restart('${t.id}')">Start Again</button><button class="btn gray" onclick="del('${t.id}')">Delete</button></div>`;
-    else controls = `<div class="row"><button class="btn gray" onclick="restart('${t.id}')">Reset</button><button class="btn red" onclick="del('${t.id}')">Delete</button></div>`;
-    const label = t.state === 'ringing' ? 'DONE!' : (t.state === 'done' ? 'Done' : fmt(t.remaining));
-    const clockLine = `<div class="clock">Start ${clock(t.startAt)} · <b style="color:${col.name}">End ${clock(t.endAt)}</b></div>`;
-    const tempLine = (t.temp != null)
-      ? `<div class="temp" style="color:${col.name}">🌡️ Start temp ${t.temp}°F</div>`
-      : `<div class="temp none">no temp set</div>`;
-    const dot = `<button class="color-dot" style="background:${col.bd}" onclick="openColor('${t.id}',event)" aria-label="Change color"></button>`;
-    card.innerHTML = `${dot}<div class="name" style="color:${col.name}">${esc(t.name)}</div><div class="time">${label}</div>${clockLine}${tempLine}${controls}`;
+    card.style.background = col.bg; card.style.borderColor = col.bd;
+
+    let badge, action, label, w, c;
+    if (t.state === 'ringing') {
+      badge = '<div class="badge discard"><span class="dot"></span>DISCARD</div>';
+      action = `<button class="act stop" onclick="stopRing('${t.id}')">Stop</button>`;
+      label = '0:00:00'; w = 100; c = '#dc2626';
+    } else if (t.state === 'done') {
+      badge = '<div class="badge done"><span class="dot"></span>DONE</div>';
+      action = `<button class="act again" onclick="restart('${t.id}')">Start again</button>`;
+      label = 'Done'; w = 0; c = '#9ca3af';
+    } else {
+      badge = '<div class="badge safe"><span class="dot"></span>SAFE</div>';
+      action = `<button class="act reset" onclick="restart('${t.id}')">${ICON_RESET} Reset</button>`;
+      label = fmt(t.remaining); w = (t.remaining / t.total * 100); c = barColor(t.remaining);
+    }
+    const tempVal = (t.temp != null) ? (t.temp + '°F') : '—';
+    card.innerHTML =
+      `<button class="kebab" onclick="openCardMenu('${t.id}',event)" aria-label="Options">⋮</button>` +
+      `<div class="cname" style="color:${col.ac}">${esc(t.name)}</div>` +
+      badge +
+      `<div class="ctime">${label}</div>` +
+      `<div class="pbar"><div class="pfill" style="width:${w}%;background:${c}"></div></div>` +
+      `<div class="cfoot"><div class="finfo">` +
+        `<div class="fcol"><span class="flabel">Discard at</span><span class="fval blue">${clock(t.endAt)}</span></div>` +
+        `<div class="fcol"><span class="flabel">Started</span><span class="fval">${clock(t.startAt)}</span></div>` +
+        `<div class="fcol"><span class="flabel">Start temp</span><span class="fval">${tempVal}</span></div>` +
+      `</div>${action}</div>`;
     wrap.appendChild(card);
-    timeEls.set(t.id, card.querySelector('.time'));
+    timeEls.set(t.id, card.querySelector('.ctime'));
+    barEls.set(t.id, card.querySelector('.pfill'));
   });
   layoutGrid();
 }
@@ -417,7 +481,11 @@ setInterval(() => {
   timers.forEach(t => {
     if (t.state === 'running') {
       const rem = Math.max(0, Math.round((t.endAt - now) / 1000));
-      if (rem !== t.remaining) { t.remaining = rem; const el = timeEls.get(t.id); if (el) el.textContent = fmt(rem); }
+      if (rem !== t.remaining) {
+        t.remaining = rem;
+        const el = timeEls.get(t.id); if (el) el.textContent = fmt(rem);
+        const bar = barEls.get(t.id); if (bar) { bar.style.width = (rem / t.total * 100) + '%'; bar.style.background = barColor(rem); }
+      }
       if (rem === 0) { t.state = 'ringing'; save(); render(); }
     }
   });
@@ -485,26 +553,26 @@ function menuClearAll() { if (timers.length && confirm('Delete ALL food cards? T
 function colsFor(n) {
   const portrait = window.innerWidth < 760;
   if (n === 6) return portrait ? 2 : 3;
-  if (n === 12) return portrait ? 3 : 4;
-  return portrait ? 3 : 6;   // 18
+  if (n === 12) return portrait ? 2 : 4;
+  return portrait ? 3 : 6;
 }
 function layoutGrid() {
   const grid = $('timers'); if (!grid) return;
   const n = settings.perScreen || 6;
   const cols = colsFor(n);
   const rows = Math.ceil(n / cols);
-  const gap = 16, padV = 36;
-  const headerH = (document.querySelector('header') || {}).offsetHeight || 0;
-  const avail = Math.max(200, window.innerHeight - headerH - padV);
+  const gap = 16;
+  const top = grid.getBoundingClientRect().top + window.scrollY;
+  const footer = document.querySelector('.footer-banner');
+  const footH = footer ? footer.offsetHeight + 36 : 60;
+  const avail = Math.max(220, window.innerHeight - top - footH);
   const cardH = (avail - (rows - 1) * gap) / rows;
-  const gridW = ((grid.clientWidth || window.innerWidth) - 36);   // content width inside grid padding
+  const gridW = (grid.clientWidth || window.innerWidth) - 48;
   const colW = (gridW - (cols - 1) * gap) / cols;
-  const wScale = (colW - 42) / 216;          // keep the "0:00:00" timer inside the column
-  const hScale = cardH / 255;                // keep the card content inside the row height
-  const scale = Math.max(0.40, Math.min(1.3, Math.min(hScale, wScale)));
-  grid.style.maxWidth = 'none';
+  const wScale = (colW - 36) / 200;
+  const hScale = cardH / 250;
+  const scale = Math.max(0.62, Math.min(1.18, Math.min(hScale, wScale)));
   grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
-  grid.style.gridAutoRows = Math.max(96, cardH) + 'px';
   document.documentElement.style.setProperty('--scale', scale);
 }
 function setPerScreen(n, e) { if (e) e.stopPropagation(); settings.perScreen = n; saveSettings(); updateMenu(); layoutGrid(); }
@@ -522,7 +590,9 @@ window.addEventListener('resize', layoutGrid);
 window.addEventListener('orientationchange', layoutGrid);
 
 /* ---------- boot ---------- */
-loadSettings(); loadName(); load(); render();
+loadSettings(); loadName(); load();
+$('sortSel').value = settings.sort;
+render();
 if (timers.some(t => t.state === 'ringing')) startAlarm();
 </script>
 </body>
