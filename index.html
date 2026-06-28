@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Kitchen Log">
 <title>Time / Temp Control Log</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -452,19 +456,27 @@ function closeMenu() { menuOpen = false; $('menuPanel').classList.remove('show')
 function updateMenu() {
   const a = $('swAutoReset'); a.textContent = settings.autoReset ? 'ON' : 'OFF'; a.className = 'switch' + (settings.autoReset ? ' on' : '');
   const s = $('swSound'); s.textContent = settings.sound ? 'ON' : 'OFF'; s.className = 'switch' + (settings.sound ? ' on' : '');
-  $('fsLabel').textContent = document.fullscreenElement ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
+  $('fsLabel').textContent = fsElement() ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
   const seg = $('perScreenSeg');
   if (seg) Array.from(seg.children).forEach(b => b.classList.toggle('on', Number(b.textContent) === settings.perScreen));
 }
 function toggleAutoReset(e) { if (e) e.stopPropagation(); settings.autoReset = !settings.autoReset; saveSettings(); updateMenu(); }
 function toggleSound(e) { if (e) e.stopPropagation(); settings.sound = !settings.sound; saveSettings(); updateMenu(); }
 function menuTestSound() { unlockAudio(); beep(true); setTimeout(() => beep(true), 700); closeMenu(); }
+function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function menuFullscreen() {
-  try {
-    if (!document.fullscreenElement) { (document.documentElement.requestFullscreen || function(){})(); }
-    else { (document.exitFullscreen || function(){})(); }
-  } catch (e) {}
   closeMenu();
+  try {
+    const el = document.documentElement;
+    if (!fsElement()) {
+      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen || el.msRequestFullscreen;
+      if (req) { req.call(el); }
+      else { alert('This browser blocks full screen. Tip: use the browser menu → "Add to Home Screen", then open the app from that icon — it runs full screen.'); }
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (exit) { exit.call(document); }
+    }
+  } catch (e) {}
 }
 function menuDeleteFinished() { timers = timers.filter(t => t.state !== 'done'); save(); render(); closeMenu(); }
 function menuClearAll() { if (timers.length && confirm('Delete ALL food cards? This cannot be undone.')) { timers = []; save(); render(); } closeMenu(); }
@@ -503,7 +515,9 @@ document.body.addEventListener('click', unlockAudio);
 $('restName').addEventListener('input', saveName);
 $('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 $('foodTemp').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
-document.addEventListener('fullscreenchange', () => { layoutGrid(); if (menuOpen) updateMenu(); });
+function onFsChange() { layoutGrid(); if (menuOpen) updateMenu(); }
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
 window.addEventListener('resize', layoutGrid);
 window.addEventListener('orientationchange', layoutGrid);
 
