@@ -97,11 +97,6 @@
 
   .empty { text-align: center; color: #9aa1ab; padding: 60px 20px; font-size: 18px; }
 
-  /* ---------- footer banner ---------- */
-  .footer-banner { display: flex; align-items: center; gap: 14px; margin: 8px 24px 28px; padding: 16px 18px; background: #eff5ff; border: 1px solid #dbe7fe; border-radius: 14px; }
-  .fb-icon { width: 34px; height: 34px; flex-shrink: 0; background: #2563eb; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-style: italic; font-size: 18px; font-family: Georgia, serif; }
-  .fb-text { font-size: 14px; color: #3b4655; line-height: 1.5; }
-
   /* ---------- menu ---------- */
   .menu-backdrop { position: fixed; inset: 0; background: rgba(17,24,39,.12); display: none; z-index: 20; }
   .menu-backdrop.show { display: block; }
@@ -153,7 +148,6 @@
     .rest-name { font-size: 26px; }
     .toolbar { padding: 14px 16px 2px; }
     #timers { padding: 14px 16px; }
-    .footer-banner { margin: 8px 16px 24px; }
     .add-btn { font-size: 15px; padding: 12px 15px; }
   }
 </style>
@@ -191,11 +185,6 @@
 
 <div id="timers"></div>
 <div class="empty" id="empty">No items yet. Tap <b>+ Add Food</b> to start one.</div>
-
-<div class="footer-banner">
-  <div class="fb-icon">i</div>
-  <div class="fb-text">Make sure all items are properly labeled with the start time and temperature.<br>Discard any food after 4 hours.</div>
-</div>
 
 <!-- menu -->
 <div class="menu-backdrop" id="menuBackdrop" onclick="closeMenu()"></div>
@@ -563,9 +552,7 @@ function layoutGrid() {
   const rows = Math.ceil(n / cols);
   const gap = 16;
   const top = grid.getBoundingClientRect().top + window.scrollY;
-  const footer = document.querySelector('.footer-banner');
-  const footH = footer ? footer.offsetHeight + 36 : 60;
-  const avail = Math.max(220, window.innerHeight - top - footH);
+  const avail = Math.max(220, window.innerHeight - top - 28);
   const cardH = (avail - (rows - 1) * gap) / rows;
   const gridW = (grid.clientWidth || window.innerWidth) - 48;
   const colW = (gridW - (cols - 1) * gap) / cols;
