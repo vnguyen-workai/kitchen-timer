@@ -501,7 +501,13 @@ function updateMenu() {
 }
 function toggleAutoReset(e) { if (e) e.stopPropagation(); settings.autoReset = !settings.autoReset; saveSettings(); updateMenu(); }
 function toggleSound(e) { if (e) e.stopPropagation(); settings.sound = !settings.sound; saveSettings(); updateMenu(); }
-function menuTestSound() { unlockAudio(); beep(true); setTimeout(() => beep(true), 700); closeMenu(); }
+function menuTestSound() {
+  closeMenu();
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
+  if (!audioCtx) return;
+  const go = () => { beep(true); setTimeout(() => beep(true), 700); };
+  if (audioCtx.state === 'suspended') audioCtx.resume().then(go); else go();
+}
 function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function menuFullscreen() {
   closeMenu();
