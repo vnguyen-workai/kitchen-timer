@@ -83,7 +83,7 @@
   .flabel { font-size: calc(12px * var(--scale)); color: #8a93a0; font-weight: 600; }
   .fval { font-size: calc(18px * var(--scale)); font-weight: 800; color: #1f2733; white-space: nowrap; }
   .fval.blue { color: #2563eb; }
-  .cbtns { display: flex; gap: 10px; }
+  .cbtns { display: flex; gap: calc(10px * var(--scale)); }
   .act { border-radius: 10px; font-size: calc(15px * var(--scale)); font-weight: 700; cursor: pointer; padding: calc(11px * var(--scale)) calc(10px * var(--scale)); display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; flex: 1; }
   .act .ic { font-size: calc(16px * var(--scale)); }
   .act.reset { background: #fff; color: #374151; border: 1.5px solid #d7dce2; }
@@ -177,7 +177,6 @@
     <select id="sortSel" onchange="setSort(this.value)">
       <option value="name">Name</option>
       <option value="color">Color</option>
-      <option value="name">Name</option>
     </select>
   </span>
 </div>
@@ -280,6 +279,12 @@ function load() {
     data.forEach(t => {
       if (!t.color) t.color = 'slate';
       if (!t.created) t.created = t.startAt || now;
+      if (!t.name) t.name = 'Food';
+      // repair legacy/corrupt running timers that lack endAt so they don't render NaN and never ring
+      if (t.state === 'running' && !t.endAt) {
+        const secs = Number.isFinite(t.remaining) ? t.remaining : t.total;
+        t.startAt = t.startAt || now; t.endAt = now + secs * 1000;
+      }
       if (t.state === 'running' && t.endAt) {
         t.remaining = Math.max(0, Math.round((t.endAt - now) / 1000));
         if (t.remaining === 0) t.state = 'ringing';
@@ -362,6 +367,7 @@ function stopRing(id) {
     const now = Date.now();
     t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000; t.state = 'running';
   } else { t.state = 'done'; t.remaining = 0; }
+  if (!timers.some(x => x.state === 'ringing')) stopAlarm();   // silence immediately, don't wait for the tick
   save(); render();
 }
 function del(id) { timers = timers.filter(x => x.id !== id); save(); render(); }
@@ -391,7 +397,7 @@ function render() {
   const rank = t => t.state === 'ringing' ? 0 : (t.state === 'done' ? 2 : 1);
   const cmp = (a, b) => {
     if (settings.sort === 'color') return (a.color || '').localeCompare(b.color || '');
-    return a.name.localeCompare(b.name);
+    return (a.name || '').localeCompare(b.name || '');
   };
   const order = timers.slice().sort((a, b) => {
     if (rank(a) !== rank(b)) return rank(a) - rank(b);
@@ -545,7 +551,7 @@ function layoutGrid() {
   // Timer must always fit the card width ("H:MM:SS" ≈ 3.6 char-widths). Cap at the
   // doubled size on roomy cards; shrink as needed so it never clips on narrow columns.
   const contentW = colW - 36 * scale - 8;   // minus card padding + small safety
-  const timerFs = Math.max(20, Math.min(84 * scale, contentW / 3.6));
+  const timerFs = Math.max(12, Math.min(84 * scale, contentW / 3.6));
   document.documentElement.style.setProperty('--timer-fs', timerFs + 'px');
 }
 function setPerScreen(n, e) { if (e) e.stopPropagation(); settings.perScreen = n; saveSettings(); updateMenu(); layoutGrid(); }
