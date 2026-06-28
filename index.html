@@ -175,8 +175,8 @@
   <div class="count" id="itemCount">0 ITEMS</div>
   <span class="sortwrap">Sort by:
     <select id="sortSel" onchange="setSort(this.value)">
-      <option value="soonest">Soonest</option>
-      <option value="newest">Newest</option>
+      <option value="name">Name</option>
+      <option value="color">Color</option>
       <option value="name">Name</option>
     </select>
   </span>
@@ -258,7 +258,7 @@ const ICON_RESET = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="curr
 
 /* ---------- state ---------- */
 let timers = [];   // {id,name,total,remaining,state:'running'|'ringing'|'done',startAt,endAt,temp,color,created}
-let settings = { autoReset: false, sound: true, perScreen: 6, sort: 'soonest' };
+let settings = { autoReset: false, sound: true, perScreen: 6, sort: 'name' };
 let addColor = 'slate';
 let colorEditId = null;
 let menuOpen = false;
@@ -294,7 +294,7 @@ function loadSettings() {
   try { const s = JSON.parse(localStorage.getItem(SET_STORE) || '{}');
     settings.autoReset = !!s.autoReset; settings.sound = s.sound !== false;
     settings.perScreen = [6, 12, 18].indexOf(s.perScreen) >= 0 ? s.perScreen : 6;
-    settings.sort = ['soonest', 'newest', 'name'].indexOf(s.sort) >= 0 ? s.sort : 'soonest';
+    settings.sort = ['name', 'color'].indexOf(s.sort) >= 0 ? s.sort : 'name';
   } catch (e) {}
 }
 function saveSettings() { try { localStorage.setItem(SET_STORE, JSON.stringify(settings)); } catch (e) {} }
@@ -390,9 +390,8 @@ function render() {
   $('itemCount').textContent = timers.length + (timers.length === 1 ? ' ITEM' : ' ITEMS');
   const rank = t => t.state === 'ringing' ? 0 : (t.state === 'done' ? 2 : 1);
   const cmp = (a, b) => {
-    if (settings.sort === 'name') return a.name.localeCompare(b.name);
-    if (settings.sort === 'newest') return (b.created || 0) - (a.created || 0);
-    return a.endAt - b.endAt;
+    if (settings.sort === 'color') return (a.color || '').localeCompare(b.color || '');
+    return a.name.localeCompare(b.name);
   };
   const order = timers.slice().sort((a, b) => {
     if (rank(a) !== rank(b)) return rank(a) - rank(b);
