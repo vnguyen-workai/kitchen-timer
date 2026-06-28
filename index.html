@@ -67,14 +67,14 @@
     padding: calc(18px * var(--scale)) calc(18px * var(--scale));
     box-shadow: 0 1px 3px rgba(16,24,40,.06);
   }
-  .color-dot { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(0,0,0,.12); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.45); }
+  .color-dot { position: absolute; top: 14px; right: 14px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(0,0,0,.12); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.45); }
   .color-dot:active { transform: scale(.9); }
   .cname { font-size: calc(25px * var(--scale)); font-weight: 800; color: #111827; padding-right: 34px; word-break: break-word; }
   .badge { display: inline-flex; align-items: center; gap: 6px; font-size: calc(12px * var(--scale)); font-weight: 800; letter-spacing: .5px; margin-top: 7px; }
   .badge .dot { width: 9px; height: 9px; border-radius: 50%; }
   .badge.discard { color: #dc2626; } .badge.discard .dot { background: #dc2626; }
   .badge.done { color: #6b7280; } .badge.done .dot { background: #9ca3af; }
-  .ctime { font-size: calc(84px * var(--scale)); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(8px * var(--scale)) 0 calc(10px * var(--scale)); letter-spacing: -1px; text-align: center; }
+  .ctime { font-size: calc(84px * var(--scale)); font-weight: 800; color: #111827; font-variant-numeric: tabular-nums; line-height: 1.1; margin: calc(14px * var(--scale)) 0 calc(4px * var(--scale)); letter-spacing: -1px; text-align: center; }
   .pbar { height: calc(7px * var(--scale)); background: #eceff3; border-radius: 99px; overflow: hidden; }
   .pfill { height: 100%; border-radius: 99px; transition: width .3s linear; }
   .cfoot { display: flex; flex-direction: column; gap: calc(13px * var(--scale)); margin-top: calc(14px * var(--scale)); }
@@ -155,9 +155,6 @@
   @media (orientation: landscape) {
     .rest-name { text-align: center; max-width: none; padding-left: 64px; padding-right: 64px; margin-left: 0; }
     .subtitle { text-align: center; }
-    /* keep cards portrait-shaped (not wide rectangles) in landscape */
-    #timers { justify-items: center; }
-    .card { max-width: 340px; margin-left: auto; margin-right: auto; }
   }
 </style>
 </head>
@@ -522,10 +519,12 @@ function menuClearAll() { if (timers.length && confirm('Delete ALL food cards? T
 
 /* ---------- fit N cards per screen ---------- */
 function colsFor(n) {
-  const portrait = window.innerWidth < 760;
-  if (n === 6) return portrait ? 2 : 3;
-  if (n === 12) return portrait ? 2 : 4;
-  return portrait ? 2 : 6;   // 18 — phones cap at 2 cols so cards stay readable (scroll for the rest)
+  const landscape = window.innerWidth > window.innerHeight;
+  const phonePortrait = !landscape && window.innerWidth < 760;
+  if (phonePortrait) return 2;   // portrait phone: 2 columns
+  if (n === 6) return 3;         // landscape (phone/tablet/TV) + tablet/desktop: 3–4 cols
+  if (n === 12) return 4;
+  return 6;                      // 18
 }
 function layoutGrid() {
   const grid = $('timers'); if (!grid) return;
