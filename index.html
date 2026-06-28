@@ -44,10 +44,9 @@
   .menu-btn:active { transform: scale(.9); }
   .menu-btn span { display: block; width: 28px; height: 3px; background: #111827; border-radius: 2px; }
   .rules { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 12px; }
-  .rules-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; color: #6b7280; font-size: 14px; flex: 1; }
+  .rules-left { display: flex; align-items: center; gap: 4px 16px; flex-wrap: wrap; color: #6b7280; font-size: 14px; flex: 1; }
   .rule { display: inline-flex; align-items: center; gap: 7px; }
   .rule .ic { font-size: 17px; color: #9ca3af; }
-  .rule-div { width: 1px; height: 16px; background: #d8dde3; }
 
   /* ---------- toolbar ---------- */
   .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px 4px; gap: 12px; }
@@ -161,7 +160,6 @@
   <div class="rules">
     <div class="rules-left">
       <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>Temp must not exceed 70&deg;F</span>
-      <span class="rule-div"></span>
       <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Discard after 4 hours</span>
     </div>
     <button class="add-btn" onclick="openAdd()">+ Add Food</button>
