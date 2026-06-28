@@ -79,8 +79,8 @@
   .pbar { height: calc(7px * var(--scale)); background: #eceff3; border-radius: 99px; overflow: hidden; }
   .pfill { height: 100%; border-radius: 99px; transition: width .3s linear; }
   .cfoot { display: flex; flex-direction: column; gap: calc(13px * var(--scale)); margin-top: calc(14px * var(--scale)); }
-  .finfo { display: flex; gap: calc(12px * var(--scale)); justify-content: space-between; }
-  .fcol { display: flex; flex-direction: column; gap: 3px; }
+  .finfo { display: flex; gap: calc(12px * var(--scale)); justify-content: space-between; flex-wrap: wrap; min-width: 0; }
+  .fcol { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .flabel { font-size: calc(12px * var(--scale)); color: #8a93a0; font-weight: 600; }
   .fval { font-size: calc(18px * var(--scale)); font-weight: 800; color: #1f2733; white-space: nowrap; }
   .fval.blue { color: #2563eb; }
@@ -517,7 +517,7 @@ function colsFor(n) {
   const portrait = window.innerWidth < 760;
   if (n === 6) return portrait ? 2 : 3;
   if (n === 12) return portrait ? 2 : 4;
-  return portrait ? 3 : 6;
+  return portrait ? 2 : 6;   // 18 — phones cap at 2 cols so cards stay readable (scroll for the rest)
 }
 function layoutGrid() {
   const grid = $('timers'); if (!grid) return;
