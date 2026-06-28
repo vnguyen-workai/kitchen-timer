@@ -29,8 +29,7 @@
   }
   .rest-name::placeholder { color: #c0c5cd; }
   .rest-name:focus { outline: none; background: #f3f5f8; }
-  .subrow { display: flex; align-items: center; gap: 12px; margin-top: 2px; }
-  .subtitle { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #2563eb; }
+  .subtitle { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #2563eb; margin-top: 2px; }
   .add-btn {
     position: absolute; top: 24px; right: 84px;
     background: #2563eb; color: #fff; border: none; border-radius: 12px;
@@ -44,7 +43,8 @@
   }
   .menu-btn:active { transform: scale(.9); }
   .menu-btn span { display: block; width: 28px; height: 3px; background: #111827; border-radius: 2px; }
-  .rules { display: flex; align-items: center; gap: 14px; margin-top: 12px; color: #6b7280; font-size: 14px; flex-wrap: wrap; }
+  .rules { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 12px; }
+  .rules-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; color: #6b7280; font-size: 14px; flex: 1; }
   .rule { display: inline-flex; align-items: center; gap: 7px; }
   .rule .ic { font-size: 17px; color: #9ca3af; }
   .rule-div { width: 1px; height: 16px; background: #d8dde3; }
@@ -145,9 +145,8 @@
     header { padding: 16px 16px 14px; }
     .menu-btn { top: 16px; right: 16px; }
     .rest-name { font-size: 26px; padding-right: 58px; }
-    .subrow { gap: 10px; }
     .subtitle { font-size: 12px; letter-spacing: 1px; }
-    .add-btn { position: static; margin-left: auto; font-size: 14px; padding: 11px 14px; }
+    .add-btn { position: static; margin-left: auto; flex-shrink: 0; font-size: 14px; padding: 11px 14px; }
     .toolbar { padding: 14px 16px 2px; }
     #timers { padding: 14px 16px; }
   }
@@ -158,14 +157,14 @@
 <header>
   <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
   <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
-  <div class="subrow">
-    <div class="subtitle">TIME / TEMP CONTROL LOG</div>
-    <button class="add-btn" onclick="openAdd()">+ Add Food</button>
-  </div>
+  <div class="subtitle">TIME / TEMP CONTROL LOG</div>
   <div class="rules">
-    <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>Temp must not exceed 70&deg;F</span>
-    <span class="rule-div"></span>
-    <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Discard after 4 hours</span>
+    <div class="rules-left">
+      <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>Temp must not exceed 70&deg;F</span>
+      <span class="rule-div"></span>
+      <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Discard after 4 hours</span>
+    </div>
+    <button class="add-btn" onclick="openAdd()">+ Add Food</button>
   </div>
 </header>
 
