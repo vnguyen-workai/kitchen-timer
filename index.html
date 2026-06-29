@@ -394,13 +394,11 @@ function render() {
   const wrap = $('timers'); timeEls.clear(); barEls.clear();
   $('empty').style.display = timers.length ? 'none' : 'block';
   $('itemCount').textContent = timers.length + (timers.length === 1 ? ' ITEM' : ' ITEMS');
-  const rank = t => t.state === 'ringing' ? 0 : (t.state === 'done' ? 2 : 1);
   const cmp = (a, b) => {
     if (settings.sort === 'color') return (a.color || '').localeCompare(b.color || '');
     return (a.name || '').localeCompare(b.name || '');
   };
   const order = timers.slice().sort((a, b) => {
-    if (rank(a) !== rank(b)) return rank(a) - rank(b);
     return cmp(a, b);
   });
   wrap.innerHTML = '';
