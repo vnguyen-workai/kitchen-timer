@@ -29,6 +29,14 @@
   }
   .rest-name::placeholder { color: #c0c5cd; }
   .rest-name:focus { outline: none; background: #f3f5f8; }
+  .dept-name {
+    display: block; width: 100%; max-width: 620px;
+    font-size: 18px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    background: transparent; color: #2563eb; border: none; border-radius: 8px;
+    padding: 2px 64px 2px 6px; margin: 4px 0 0 -6px;
+  }
+  .dept-name::placeholder { color: #93b4ec; }
+  .dept-name:focus { outline: none; background: #f3f5f8; }
   .subtitle { font-size: 18px; font-weight: 800; letter-spacing: 2px; color: #2563eb; margin-top: 4px; }
   .add-btn {
     margin-left: auto; flex-shrink: 0;
@@ -144,6 +152,7 @@
     header { padding: 10px 16px 14px; }
     .menu-btn { top: 16px; right: 16px; }
     .rest-name { font-size: 31px; padding-right: 58px; }
+    .dept-name { font-size: 15px; letter-spacing: 1.5px; padding-right: 58px; }
     .subtitle { font-size: 15px; letter-spacing: 1.5px; }
     .add-btn { font-size: 14px; padding: 11px 14px; }
     .toolbar { padding: 14px 16px 2px; }
@@ -152,6 +161,7 @@
   /* landscape (desktop, TV, tablet/phone sideways): center the name + subtitle */
   @media (orientation: landscape) {
     .rest-name { text-align: center; max-width: none; padding-left: 64px; padding-right: 64px; margin-left: 0; }
+    .dept-name { text-align: center; max-width: none; padding-left: 64px; padding-right: 64px; margin-left: 0; }
     .subtitle { text-align: center; }
   }
 </style>
@@ -161,6 +171,7 @@
 <header>
   <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
   <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
+  <input class="dept-name" id="deptName" type="text" placeholder="Department name" autocomplete="off">
   <div class="subtitle">TIME / TEMP CONTROL LOG</div>
   <div class="rules">
     <div class="rules-left">
@@ -194,14 +205,6 @@
   <div class="menu-row" onclick="toggleSound(event)">
     <div><div class="menu-title">Sound</div><div class="menu-sub">Alarm beep on this device</div></div>
     <span class="switch" id="swSound">ON</span>
-  </div>
-  <div class="menu-row">
-    <div><div class="menu-title">Per screen</div><div class="menu-sub">Cards that fit one screen</div></div>
-    <div class="seg" id="perScreenSeg">
-      <button onclick="setPerScreen(6,event)">6</button>
-      <button onclick="setPerScreen(12,event)">12</button>
-      <button onclick="setPerScreen(18,event)">18</button>
-    </div>
   </div>
   <div class="menu-row" onclick="menuTestSound()"><span>🔊 Test sound</span></div>
   <div class="menu-row" onclick="menuFullscreen()"><span id="fsLabel">⛶ Fullscreen</span></div>
@@ -257,7 +260,8 @@ const ICON_RESET = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="curr
 
 /* ---------- state ---------- */
 let timers = [];   // {id,name,total,remaining,state:'running'|'ringing'|'done',startAt,endAt,temp,color,created}
-let settings = { autoReset: false, sound: true, perScreen: 6, sort: 'name' };
+let settings = { autoReset: false, sound: true, sort: 'name' };
+const PER_SCREEN = 6;
 let addColor = 'slate';
 let colorEditId = null;
 let menuOpen = false;
@@ -266,6 +270,7 @@ const FOUR_HOURS = 4 * 3600;
 const $ = id => document.getElementById(id);
 const STORE = 'kitchenTimersV4';
 const NAME_STORE = 'kitchenRestName';
+const DEPT_STORE = 'kitchenDeptName';
 const SET_STORE = 'kitchenSettings';
 const timeEls = new Map();
 const barEls = new Map();
@@ -295,10 +300,11 @@ function load() {
 }
 function loadName() { try { $('restName').value = localStorage.getItem(NAME_STORE) || ''; } catch (e) {} }
 function saveName() { try { localStorage.setItem(NAME_STORE, $('restName').value); } catch (e) {} }
+function loadDept() { try { $('deptName').value = localStorage.getItem(DEPT_STORE) || ''; } catch (e) {} }
+function saveDept() { try { localStorage.setItem(DEPT_STORE, $('deptName').value); } catch (e) {} }
 function loadSettings() {
   try { const s = JSON.parse(localStorage.getItem(SET_STORE) || '{}');
     settings.autoReset = !!s.autoReset; settings.sound = s.sound !== false;
-    settings.perScreen = [6, 12, 18].indexOf(s.perScreen) >= 0 ? s.perScreen : 6;
     settings.sort = ['name', 'color'].indexOf(s.sort) >= 0 ? s.sort : 'name';
   } catch (e) {}
 }
@@ -494,8 +500,6 @@ function updateMenu() {
   const a = $('swAutoReset'); a.textContent = settings.autoReset ? 'ON' : 'OFF'; a.className = 'switch' + (settings.autoReset ? ' on' : '');
   const s = $('swSound'); s.textContent = settings.sound ? 'ON' : 'OFF'; s.className = 'switch' + (settings.sound ? ' on' : '');
   $('fsLabel').textContent = fsElement() ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
-  const seg = $('perScreenSeg');
-  if (seg) Array.from(seg.children).forEach(b => b.classList.toggle('on', Number(b.textContent) === settings.perScreen));
 }
 function toggleAutoReset(e) { if (e) e.stopPropagation(); settings.autoReset = !settings.autoReset; saveSettings(); updateMenu(); }
 function toggleSound(e) { if (e) e.stopPropagation(); settings.sound = !settings.sound; saveSettings(); updateMenu(); }
@@ -543,7 +547,7 @@ function colsFor(n) {
 }
 function layoutGrid() {
   const grid = $('timers'); if (!grid) return;
-  const n = settings.perScreen || 6;
+  const n = PER_SCREEN;
   const cols = colsFor(n);
   const rows = Math.ceil(n / cols);
   const gap = 16;
@@ -563,12 +567,11 @@ function layoutGrid() {
   const timerFs = Math.max(12, Math.min(84 * scale, contentW / 3.6));
   document.documentElement.style.setProperty('--timer-fs', timerFs + 'px');
 }
-function setPerScreen(n, e) { if (e) e.stopPropagation(); settings.perScreen = n; saveSettings(); updateMenu(); layoutGrid(); }
-
 /* ---------- listeners ---------- */
 document.body.addEventListener('touchstart', unlockAudio);
 document.body.addEventListener('click', unlockAudio);
 $('restName').addEventListener('input', saveName);
+$('deptName').addEventListener('input', saveDept);
 $('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 $('foodTemp').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 function onFsChange() { layoutGrid(); if (menuOpen) updateMenu(); }
@@ -578,7 +581,7 @@ window.addEventListener('resize', layoutGrid);
 window.addEventListener('orientationchange', layoutGrid);
 
 /* ---------- boot ---------- */
-loadSettings(); loadName(); load();
+loadSettings(); loadName(); loadDept(); load();
 $('sortSel').value = settings.sort;
 render();
 if (timers.some(t => t.state === 'ringing')) startAlarm();
