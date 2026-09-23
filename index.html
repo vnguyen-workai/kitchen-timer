@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kitchen Log">
+<meta name="application-name" content="Kitchen Log">
 <meta name="theme-color" content="#eef2f8">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <title>Time / Temp Control Log</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -15,6 +19,8 @@
     --ink: #0f172a; --muted: #64748b; --blue: #2563eb;
     --spring: cubic-bezier(.32, .72, 0, 1);        /* iOS sheet curve */
     --bounce: cubic-bezier(.34, 1.56, .64, 1);     /* small overshoot */
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-t: env(safe-area-inset-top, 0px);
   }
   html, body {
     margin: 0; padding: 0; min-height: 100%;
@@ -23,6 +29,7 @@
     -webkit-user-select: none; user-select: none;
     -webkit-font-smoothing: antialiased;
   }
+  body { padding-bottom: calc(110px + var(--safe-b)); }
   /* soft color field behind the glass */
   body::before {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
@@ -53,32 +60,44 @@
   .press { transition: transform .35s var(--bounce); }
   .press:active { transform: scale(.96); transition-duration: .08s; }
 
+  /* ---------- views (tabs) ---------- */
+  .view { display: none; }
+  .view.on { display: block; animation: viewIn .4s var(--spring) both; }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(8px); } }
+  .page { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  .page-title { font-size: 36px; font-weight: 800; letter-spacing: -.8px; margin: calc(22px + var(--safe-t)) 8px 6px; }
+
   /* ---------- header ---------- */
-  header { position: relative; margin: 16px 16px 0; border-radius: 28px; padding: 22px 26px 22px; }
+  header {
+    position: relative; margin: calc(16px + var(--safe-t)) 16px 0; border-radius: 28px; padding: 22px 26px 22px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px;
+  }
+  .hmain { min-width: 0; }
   .rest-name {
     display: block; width: 100%;
     font: inherit; font-size: 54px; font-weight: 900; letter-spacing: -1.5px; line-height: 1.05;
     background: transparent; color: var(--ink); border: none; border-radius: 12px;
-    padding: 2px 70px 2px 6px; margin: 0 0 0 -6px;
+    padding: 2px 6px; margin: 0 0 0 -6px;
   }
   .rest-name::placeholder { color: rgba(15,23,42,.22); }
+  .rest-name:focus { outline: none; background: rgba(255,255,255,.6); }
   .log-title { font-size: 26px; font-weight: 800; letter-spacing: -.4px; color: var(--ink); margin-top: 6px; }
-  .dept-name {
-    display: block; width: 100%;
+  .dept-btn {
+    display: inline-flex; align-items: center; gap: 6px; position: relative;
     font: inherit; font-size: 17px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-    background: transparent; color: var(--blue); border: none; border-radius: 10px;
-    padding: 2px 6px; margin: 6px 0 0 -6px;
+    background: transparent; color: var(--blue); border: none; border-radius: 10px; cursor: pointer;
+    padding: 4px 8px; margin: 4px 0 0 -8px;
   }
-  .dept-name::placeholder { color: rgba(37,99,235,.38); }
-  .rest-name:focus, .dept-name:focus { outline: none; background: rgba(255,255,255,.6); }
-  /* name/title/dept/rules on the left, Add Food bottom-right — no dead space */
-  header { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; }
-  .hmain { min-width: 0; }
-  .add-btn { grid-column: 2; grid-row: 1; align-self: end; }
-  .rules { display: flex; align-items: center; gap: 6px 22px; flex-wrap: wrap; color: #6b7280; font-size: 15px; margin-top: 12px; }
+  .dept-btn:active { background: rgba(37,99,235,.08); }
+  .dept-btn .chev { font-size: 15px; stroke-width: 3; }
+  .dot-alert { width: 9px; height: 9px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 2px #fff; display: none; }
+  .dot-alert.show { display: inline-block; animation: pulseRed 1.4s ease-in-out infinite; }
+  @keyframes pulseRed { 0%,100% { box-shadow: 0 0 0 2px #fff, 0 0 0 2px rgba(239,68,68,.5); } 50% { box-shadow: 0 0 0 2px #fff, 0 0 0 7px rgba(239,68,68,0); } }
+  .rules { display: flex; align-items: center; gap: 6px 22px; flex-wrap: wrap; color: #6b7280; font-size: 15px; margin-top: 10px; }
   .rule { display: inline-flex; align-items: center; gap: 7px; }
   .rule .ic { font-size: 17px; color: #9ca3af; }
   .add-btn {
+    grid-column: 2; grid-row: 1; align-self: end;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     font: inherit; font-size: 17px; font-weight: 700; color: #fff; cursor: pointer; white-space: nowrap;
     padding: 15px 28px; border: none; border-radius: 999px;
@@ -86,11 +105,15 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 6px rgba(15,50,160,.25), 0 8px 20px rgba(37,99,235,.32);
   }
   .add-btn .plus { font-size: 22px; line-height: 1; margin-top: -2px; }
-  .menu-btn {
-    position: absolute; top: 18px; right: 18px; width: 50px; height: 50px; border-radius: 50%;
-    cursor: pointer; padding: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+
+  /* alert for expired items in other departments */
+  .dept-alert {
+    display: none; align-items: center; justify-content: space-between; gap: 12px;
+    margin: 14px 16px 0; padding: 12px 14px 12px 18px; border-radius: 20px;
+    background: rgba(254,226,226,.75) !important; color: #b91c1c; font-weight: 700; font-size: 15px;
   }
-  .menu-btn span { display: block; width: 20px; height: 2.5px; background: var(--ink); border-radius: 2px; }
+  .dept-alert.show { display: flex; animation: viewIn .4s var(--spring) both; }
+  .dept-alert button { font: inherit; font-size: 15px; font-weight: 700; border: none; border-radius: 999px; padding: 9px 16px; background: #dc2626; color: #fff; cursor: pointer; white-space: nowrap; }
 
   /* ---------- toolbar ---------- */
   .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 28px 4px; gap: 12px; }
@@ -105,7 +128,7 @@
   .sortwrap select:focus { outline: none; }
 
   /* ---------- cards (liquid glass, tinted by card color) ---------- */
-  #timers { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 12px 24px 32px; }
+  #timers { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 12px 24px 16px; }
   .card {
     --ring: rgba(255,255,255,0); --tint: rgba(255,255,255,0);
     position: relative; min-width: 0; border-radius: 26px; padding: 20px;
@@ -132,14 +155,15 @@
   .cdot { position: relative; width: 16px; height: 16px; border-radius: 50%; border: none; padding: 0; flex-shrink: 0; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
   .cdot::after { content: ""; position: absolute; inset: -12px; }
   .csub { font-size: 15px; color: var(--muted); margin-top: 4px; }
-  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; font-size: 14px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  .csub.hot { color: #dc2626; font-weight: 700; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; font-size: 14px; font-weight: 700; white-space: nowrap; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.7); }
   .pill .d { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
-  .pill { box-shadow: inset 0 1px 0 rgba(255,255,255,.7); }
   .pill.active { background: rgba(220,252,231,.85); color: #15803d; }
   .pill.due    { background: rgba(254,243,199,.9); color: #b45309; }
   .pill.due .d { animation: pulse 1.6s ease-in-out infinite; }
   .pill.exp    { background: rgba(254,226,226,.9); color: #dc2626; }
   .pill.done   { background: rgba(241,245,249,.85); color: #64748b; }
+  .pill.reset  { background: rgba(254,243,199,.9); color: #b45309; }
   @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.6); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); } }
   .trow { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin: 14px 0 14px; }
   .ctime { font-size: var(--timer-fs, 64px); font-weight: 800; letter-spacing: -1.5px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
@@ -176,30 +200,65 @@
 
   .empty { margin: 16px 24px; border-radius: 24px; text-align: center; color: var(--muted); padding: 56px 20px; font-size: 18px; }
 
-  /* ---------- menu ---------- */
-  .menu-backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(15,23,42,.06); opacity: 0; visibility: hidden; transition: opacity .25s, visibility 0s .25s; }
-  .menu-backdrop.show { opacity: 1; visibility: visible; transition: opacity .25s; }
-  .menu-panel {
-    position: fixed; top: 80px; right: 20px; width: 300px; max-width: calc(100vw - 24px); z-index: 21;
-    border-radius: 22px; padding: 6px; overflow: hidden;
-    background: rgba(255,255,255,.72);
-    opacity: 0; visibility: hidden; transform: scale(.9) translateY(-8px); transform-origin: top right;
-    transition: opacity .2s, transform .4s var(--spring), visibility 0s .4s;
-  }
-  .menu-panel.show { opacity: 1; visibility: visible; transform: none; transition: opacity .2s, transform .45s var(--spring); }
-  .menu-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px; font-size: 16px; font-weight: 600; color: #1f2733; cursor: pointer; border-radius: 14px; transition: background .15s; }
-  .menu-row:active { background: rgba(15,23,42,.06); }
-  .menu-title { font-size: 16px; font-weight: 700; }
-  .menu-sub { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
-  .menu-divider { height: 1px; background: rgba(15,23,42,.08); margin: 4px 10px; }
-  .menu-row.danger { color: #dc2626; }
-  /* iOS-style switch */
+  /* ---------- iOS grouped lists (History + Settings) ---------- */
+  .glabel { font-size: 13px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); margin: 24px 20px 8px; }
+  .group { border-radius: 22px; overflow: hidden; }
+  .row { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 18px; min-height: 56px; font-size: 17px; color: var(--ink); cursor: pointer; transition: background .15s; }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 56px; right: 0; height: 1px; background: rgba(15,23,42,.08); }
+  .row:active { background: rgba(15,23,42,.05); }
+  .row.static { cursor: default; }
+  .row.static:active { background: transparent; }
+  .row .ric { width: 24px; font-size: 22px; color: #334155; flex-shrink: 0; display: inline-flex; justify-content: center; }
+  .row .rtxt { flex: 1; min-width: 0; }
+  .row .rsub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .row .rval { color: var(--muted); white-space: nowrap; }
+  .row .rchev { color: #94a3b8; font-size: 18px; stroke-width: 2.6; flex-shrink: 0; }
+  .row.sel { background: rgba(37,99,235,.08); }
+  .row.sel .rname { font-weight: 700; }
+  .row .rcheck { color: var(--blue); font-size: 20px; stroke-width: 2.8; }
+  .row.danger { color: #dc2626; }
+  .row.danger .ric { color: #dc2626; }
+  .row.blue { color: var(--blue); }
+  .row.blue .ric { color: var(--blue); }
+  .badge-n { min-width: 24px; height: 24px; padding: 0 7px; border-radius: 99px; background: rgba(15,23,42,.07); color: var(--muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+  .badge-n.red { background: #ef4444; color: #fff; }
+  .edit-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(15,23,42,.05); color: #475569; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 16px; }
+  .gnote { font-size: 13px; color: var(--muted); margin: 8px 20px 0; line-height: 1.4; }
   .ios-sw { position: relative; width: 51px; height: 31px; border-radius: 999px; background: #e2e8f0; flex-shrink: 0; transition: background .25s; }
   .ios-sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: transform .4s var(--bounce); }
   .ios-sw.on { background: #34c759; }
   .ios-sw.on::after { transform: translateX(20px); }
 
-  /* ---------- modals / sheets ---------- */
+  /* history */
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 6px 4px 2px; margin-top: 8px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex-shrink: 0; font: inherit; font-size: 15px; font-weight: 700; padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.8); cursor: pointer; color: #334155; background: rgba(255,255,255,.55); transition: background .2s, color .2s; }
+  .chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .hrow-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .hname { font-weight: 700; }
+  .hright { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .hright .pill { padding: 5px 11px; font-size: 13px; }
+  .htime { font-size: 13px; color: var(--muted); }
+
+  /* ---------- tab bar ---------- */
+  .tabbar {
+    position: fixed; left: 50%; bottom: calc(12px + var(--safe-b)); transform: translateX(-50%); z-index: 15;
+    width: min(460px, calc(100% - 24px)); display: flex; padding: 6px; border-radius: 32px;
+    background: rgba(255,255,255,.7);
+  }
+  .tab-ind {
+    position: absolute; top: 6px; bottom: 6px; left: 6px; width: calc((100% - 12px) / 3); border-radius: 26px;
+    background: rgba(37,99,235,.11); box-shadow: inset 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 1px rgba(37,99,235,.08);
+    transition: transform .5s var(--spring);
+  }
+  .tab { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px 7px; border: none; background: transparent; font: inherit; font-size: 12.5px; font-weight: 600; color: #64748b; cursor: pointer; transition: color .25s; }
+  .tab .ic { font-size: 25px; }
+  .tab.on { color: var(--blue); }
+  .tab span.tl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tab .tbadge { position: absolute; top: 4px; left: calc(50% + 8px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 800; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 2px #fff; }
+  .tab .tbadge.show { display: inline-flex; }
+
+  /* ---------- sheets / pop-ups ---------- */
   .overlay { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,.28); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
   .overlay.show { display: flex; animation: fadeIn .25s both; }
   .overlay.closing { animation: fadeOut .22s both; }
@@ -211,7 +270,7 @@
   @keyframes popOut { to { opacity: 0; transform: scale(.95); } }
   .grabber { display: none; width: 40px; height: 5px; border-radius: 99px; background: rgba(15,23,42,.18); margin: -12px auto 14px; }
   .modal h2 { margin: 0 0 6px; font-size: 23px; text-align: center; color: var(--ink); letter-spacing: -.3px; }
-  .modal .fixed-note { text-align: center; color: var(--muted); font-size: 15px; margin: 0 0 20px; }
+  .modal .fixed-note { text-align: center; color: var(--muted); font-size: 15px; margin: 0 0 20px; line-height: 1.4; }
   .modal .fixed-note b { color: #16a34a; }
   .modal label { font-size: 14px; color: var(--muted); font-weight: 700; display: block; margin-bottom: 7px; }
   .modal input[type=text], .modal input[type=number] {
@@ -221,29 +280,37 @@
   }
   .modal input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.14); }
   .modal .actions { display: flex; gap: 12px; margin-top: 8px; }
+  .modal .group { background: rgba(255,255,255,.7); border: 1px solid rgba(15,23,42,.06); margin-bottom: 14px; }
+  .modal ol { margin: 0 0 16px; padding-left: 22px; font-size: 16px; line-height: 1.6; color: #334155; }
   .btn { border: none; border-radius: 16px; font: inherit; font-size: 17px; font-weight: 700; padding: 15px 16px; cursor: pointer; flex: 1; }
   .btn.blue { background: linear-gradient(180deg, #4f8cff, #2563eb); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 6px 16px rgba(37,99,235,.28); }
   .btn.ghost { background: rgba(15,23,42,.06); color: #374151; }
+  .btn.red { background: rgba(254,226,226,.9); color: #dc2626; }
   .swatches { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 4px 0 18px; }
   .swatch { width: 42px; height: 42px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); transition: transform .35s var(--bounce), border-color .2s; }
   .swatch.sel { border-color: var(--ink); transform: scale(1.1); }
+  .stepper { display: flex; align-items: center; justify-content: center; gap: 22px; margin: 10px 0 22px; }
+  .stepper button { width: 56px; height: 56px; border-radius: 50%; border: none; font: inherit; font-size: 28px; font-weight: 600; background: rgba(15,23,42,.06); color: var(--ink); cursor: pointer; }
+  .stepper .sv { font-size: 44px; font-weight: 800; min-width: 150px; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
 
   /* ---------- phone ---------- */
   @media (max-width: 639px) {
-    header { margin: 12px 12px 0; padding: 18px 18px 18px; border-radius: 26px; }
-    .menu-btn { top: 14px; right: 14px; width: 46px; height: 46px; }
-    .rest-name { font-size: 38px; letter-spacing: -1px; padding-right: 56px; }
+    header { margin: calc(12px + var(--safe-t)) 12px 0; padding: 18px 18px 18px; border-radius: 26px; grid-template-columns: minmax(0, 1fr); }
+    .rest-name { font-size: 38px; letter-spacing: -1px; }
     .log-title { font-size: 21px; }
-    .dept-name { font-size: 14px; letter-spacing: 1.5px; }
-    header { grid-template-columns: minmax(0, 1fr); }
+    .dept-btn { font-size: 14px; letter-spacing: 1.5px; }
     .rules { flex-direction: column; align-items: flex-start; gap: 6px; }
     .add-btn { grid-column: 1; grid-row: auto; width: 100%; padding: 15px; margin-top: 14px; }
+    .dept-alert { margin: 12px 12px 0; }
     .toolbar { padding: 18px 18px 2px; }
-    #timers { padding: 10px 12px 28px; gap: 14px; }
+    #timers { padding: 10px 12px 16px; gap: 14px; }
     .empty { margin: 14px 12px; }
+    .page { padding: 0 12px; }
+    .page-title { font-size: 32px; margin-top: calc(16px + var(--safe-t)); }
+    .row + .row::before { left: 52px; }
     /* bottom sheets */
     .overlay { align-items: flex-end; padding: 0; }
-    .modal { max-width: none; border-radius: 30px 30px 0 0; padding-bottom: calc(24px + env(safe-area-inset-bottom)); animation: sheetUp .5s var(--spring) both; }
+    .modal { max-width: none; border-radius: 30px 30px 0 0; padding-bottom: calc(24px + var(--safe-b)); animation: sheetUp .5s var(--spring) both; }
     .overlay.closing .modal { animation: sheetDown .25s ease-in both; }
     .grabber { display: block; }
   }
@@ -258,58 +325,120 @@
 </head>
 <body>
 
-<header class="glass">
-  <button class="menu-btn glass press" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
-  <div class="hmain">
-    <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
-    <div class="log-title">Time / Temp Control Log</div>
-    <input class="dept-name" id="deptName" type="text" placeholder="Department name" autocomplete="off">
-    <div class="rules">
-      <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>Temp must not exceed 70&deg;F</span>
-      <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Discard after 4 hours</span>
+<!-- ================= KITCHEN ================= -->
+<main class="view on" id="viewKitchen">
+  <header class="glass">
+    <div class="hmain">
+      <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
+      <div class="log-title">Time / Temp Control Log</div>
+      <button class="dept-btn" onclick="openDeptSheet()"><span id="deptLabel">Kitchen</span><span class="dot-alert" id="deptDot"></span><svg class="ic chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="rules">
+        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleTemp">Temp must not exceed 70&deg;F</span></span>
+        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ruleTime">Discard after 4 hours</span></span>
+      </div>
     </div>
-  </div>
-  <button class="add-btn press" onclick="openAdd()"><span class="plus">+</span> Add Food</button>
-</header>
+    <button class="add-btn press" onclick="openAdd()"><span class="plus">+</span> Add Food</button>
+  </header>
 
-<div class="toolbar">
-  <div class="count" id="itemCount">0 items</div>
-  <span class="sortwrap glass">Sort by:
-    <select id="sortSel" onchange="setSort(this.value)">
-      <option value="name">Name</option>
-      <option value="color">Color</option>
-    </select>
-  </span>
-</div>
+  <div class="dept-alert glass" id="deptAlert"><span id="deptAlertText"></span><button class="press" id="deptAlertBtn">View</button></div>
 
-<div id="timers"></div>
-<div class="empty glass" id="empty">No items yet. Tap <b>+ Add Food</b> to start one.</div>
+  <div class="toolbar">
+    <div class="count" id="itemCount">0 items</div>
+    <span class="sortwrap glass">Sort by:
+      <select id="sortSel" onchange="setSort(this.value)">
+        <option value="name">Name</option>
+        <option value="color">Color</option>
+      </select>
+    </span>
+  </div>
 
-<!-- menu -->
-<div class="menu-backdrop" id="menuBackdrop" onclick="closeMenu()"></div>
-<div class="menu-panel glass" id="menuPanel">
-  <div class="menu-row" onclick="toggleAutoReset(event)">
-    <div><div class="menu-title">Auto-reset</div><div class="menu-sub">Timer auto-restarts after hitting STOP</div></div>
-    <span class="ios-sw" id="swAutoReset"></span>
+  <div id="timers"></div>
+  <div class="empty glass" id="empty">No items yet. Tap <b>+ Add Food</b> to start one.</div>
+</main>
+
+<!-- ================= HISTORY ================= -->
+<main class="view" id="viewHistory">
+  <div class="page">
+    <div class="page-title">History</div>
+    <div class="chips" id="histChips"></div>
+    <div id="histList"></div>
   </div>
-  <div class="menu-row" onclick="toggleSound(event)">
-    <div><div class="menu-title">Sound</div><div class="menu-sub">Alarm beep on this device</div></div>
-    <span class="ios-sw" id="swSound"></span>
+</main>
+
+<!-- ================= SETTINGS ================= -->
+<main class="view" id="viewSettings">
+  <div class="page">
+    <div class="page-title">Settings</div>
+
+    <div class="glabel">Food safety rules</div>
+    <div class="group glass">
+      <div class="row" onclick="openTempSheet()">
+        <span class="ric" data-ic="thermo"></span><span class="rtxt">Max Temperature</span><span class="rval" id="valTemp">70°F</span><span class="rchev" data-ic="chevR"></span>
+      </div>
+      <div class="row" onclick="openHoursSheet()">
+        <span class="ric" data-ic="clock"></span><span class="rtxt">Discard After</span><span class="rval" id="valHours">4 hours</span><span class="rchev" data-ic="chevR"></span>
+      </div>
+    </div>
+
+    <div class="glabel">Departments</div>
+    <div class="group glass" id="deptList"></div>
+    <div class="gnote">Each department keeps its own food cards. Tap to switch, ✎ to rename or delete.</div>
+
+    <div class="glabel">App</div>
+    <div class="group glass">
+      <div class="row" onclick="toggleSetting('sound')">
+        <span class="ric" data-ic="speaker"></span><span class="rtxt">Alarm Sound<div class="rsub">Beep when time is up</div></span><span class="ios-sw" id="swSound"></span>
+      </div>
+      <div class="row" onclick="menuTestSound()">
+        <span class="ric" data-ic="bell"></span><span class="rtxt">Test Sound</span><span class="rchev" data-ic="chevR"></span>
+      </div>
+      <div class="row" onclick="toggleSetting('autoReset')">
+        <span class="ric" data-ic="reset"></span><span class="rtxt">Auto-reset<div class="rsub">Restart the timer after tapping Stop</div></span><span class="ios-sw" id="swAutoReset"></span>
+      </div>
+      <div class="row" onclick="toggleSetting('wake')">
+        <span class="ric" data-ic="tablet"></span><span class="rtxt">Keep Screen Awake<div class="rsub" id="wakeSub">Screen stays on while the app is open</div></span><span class="ios-sw" id="swWake"></span>
+      </div>
+      <div class="row" onclick="menuFullscreen()">
+        <span class="ric" data-ic="full"></span><span class="rtxt" id="fsLabel">Fullscreen</span><span class="rchev" data-ic="chevR"></span>
+      </div>
+      <div class="row" onclick="openInstall()">
+        <span class="ric" data-ic="install"></span><span class="rtxt">Install as App<div class="rsub" id="installSub">Add to your home screen</div></span><span class="rchev" data-ic="chevR"></span>
+      </div>
+    </div>
+
+    <div class="glabel">Data</div>
+    <div class="group glass">
+      <div class="row blue" onclick="exportHistory()">
+        <span class="ric" data-ic="export"></span><span class="rtxt">Export History (CSV)<div class="rsub">Open in Excel or Google Sheets</div></span>
+      </div>
+      <div class="row" onclick="menuDeleteFinished()">
+        <span class="ric" data-ic="check"></span><span class="rtxt">Delete Finished Cards<div class="rsub" id="subFinished">In this department</div></span>
+      </div>
+      <div class="row danger" onclick="menuClearAll()">
+        <span class="ric" data-ic="trash"></span><span class="rtxt" id="lblClearAll">Clear All Cards</span>
+      </div>
+      <div class="row danger" onclick="clearHistory()">
+        <span class="ric" data-ic="trash"></span><span class="rtxt">Clear History</span>
+      </div>
+    </div>
+    <div class="gnote" style="margin-bottom:10px">Everything is saved on this device only.</div>
   </div>
-  <div class="menu-divider"></div>
-  <div class="menu-row" onclick="menuTestSound()"><span>🔊 Test sound</span></div>
-  <div class="menu-row" onclick="menuFullscreen()"><span id="fsLabel">⛶ Fullscreen</span></div>
-  <div class="menu-divider"></div>
-  <div class="menu-row" onclick="menuDeleteFinished()"><span>Delete finished</span></div>
-  <div class="menu-row danger" onclick="menuClearAll()"><span>Clear all cards</span></div>
-</div>
+</main>
+
+<!-- ================= TAB BAR ================= -->
+<nav class="tabbar glass" id="tabbar">
+  <div class="tab-ind" id="tabInd"></div>
+  <button class="tab on" data-tab="kitchen" onclick="showTab('kitchen')"><span data-ic="home"></span><span class="tl" id="tabKitchenLabel">Kitchen</span><span class="tbadge" id="tabBadge"></span></button>
+  <button class="tab" data-tab="history" onclick="showTab('history')"><span data-ic="clock"></span><span class="tl">History</span></button>
+  <button class="tab" data-tab="settings" onclick="showTab('settings')"><span data-ic="gear"></span><span class="tl">Settings</span></button>
+</nav>
 
 <!-- Add Food sheet -->
 <div class="overlay" id="overlay">
   <div class="modal glass">
     <div class="grabber"></div>
     <h2>Add Food</h2>
-    <p class="fixed-note">Timer is fixed at <b>4 hours</b></p>
+    <p class="fixed-note" id="addNote">Timer is set to <b>4 hours</b></p>
     <label>Food name</label>
     <input type="text" id="foodName" placeholder="e.g. Beef, Crab, Chicken" autocomplete="off">
     <label>Start temp °F <small style="color:#9aa1ab">(optional)</small></label>
@@ -318,7 +447,7 @@
     <div class="swatches" id="addSwatchRow"></div>
     <div class="actions">
       <button class="btn ghost press" onclick="closeAdd()">Cancel</button>
-      <button class="btn blue press" onclick="startTimer()">Start 4h Timer</button>
+      <button class="btn blue press" id="startBtn" onclick="startTimer()">Start 4h Timer</button>
     </div>
   </div>
 </div>
@@ -329,11 +458,48 @@
     <div class="grabber"></div>
     <h2>Card color</h2>
     <div class="swatches" id="cardSwatchRow" style="margin-top:14px"></div>
-    <div class="actions"><button class="btn ghost press" onclick="closeColor()">Close</button></div>
+    <div class="actions"><button class="btn ghost press" onclick="hideOverlay('colorOverlay')">Close</button></div>
+  </div>
+</div>
+
+<!-- Generic sheet (settings pickers, departments, install help) -->
+<div class="overlay" id="sheet">
+  <div class="modal glass">
+    <div class="grabber"></div>
+    <div id="sheetBody"></div>
   </div>
 </div>
 
 <script>
+/* ---------- icons ---------- */
+const ICONS = {
+  home:    '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  clock:   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  gear:    '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  thermo:  '<path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/>',
+  chevR:   '<path d="m9 18 6-6-6-6"/>',
+  check:   '<path d="M20 6 9 17l-5-5"/>',
+  plus:    '<path d="M12 5v14M5 12h14"/>',
+  pencil:  '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  speaker: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
+  bell:    '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  reset:   '<path d="M3 12a9 9 0 1 0 2.5-6.2"/><path d="M3 4v5h5"/>',
+  tablet:  '<rect x="5" y="2" width="14" height="20" rx="2.5"/><path d="M11 18h2"/>',
+  full:    '<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  install: '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+  export:  '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 12v6"/><path d="m9 15 3 3 3-3"/>',
+  trash:   '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>',
+  chef:    '<path d="M6 13.9A4 4 0 0 1 7.5 6.2a4.5 4.5 0 0 1 9 0A4 4 0 0 1 18 13.9V20H6z"/><path d="M6 16.5h12"/>',
+  knife:   '<path d="M3 21l7-7"/><path d="M10 14 20.5 3.5c.8.8.8 3-1 4.8L13 14.8z"/>',
+  box:     '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>',
+  cloche:  '<path d="M3 18h18"/><path d="M5 18a7 7 0 0 1 14 0"/><path d="M12 9V7"/><path d="M10 7h4"/>',
+  tag:     '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>'
+};
+function icon(name, extraClass) {
+  return '<svg class="ic' + (extraClass ? ' ' + extraClass : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || '') + '</svg>';
+}
+const ICON_RESET = icon('reset'), ICON_TRASH = icon('trash'), ICON_CLOCK = icon('clock');
+
 /* ---------- colors ---------- */
 const COLORS = {
   slate:  { bd: 'rgba(255,255,255,0)', tint: 'rgba(255,255,255,0)',   ac: '#0f172a' },
@@ -350,73 +516,121 @@ const COLOR_ORDER = ['slate','red','orange','yellow','green','teal','blue','purp
 function colorOf(t) { return COLORS[t && t.color] || COLORS.slate; }
 function dotOf(key) { return key === 'slate' ? '#cbd2da' : (COLORS[key] || COLORS.slate).ac; }
 
-const svg = p => '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
-const ICON_RESET = svg('<path d="M3 12a9 9 0 1 0 2.5-6.2"/><path d="M3 4v5h5"/>');
-const ICON_TRASH = svg('<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>');
-const ICON_CLOCK = svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>');
-
 /* ---------- state ---------- */
-let timers = [];   // {id,name,total,remaining,state:'running'|'ringing'|'done',startAt,endAt,temp,color,created}
-let settings = { autoReset: false, sound: true, sort: 'name' };
+let timers = [];   // {id,name,dept,total,remaining,state:'running'|'ringing'|'done',startAt,endAt,temp,color,created,logged}
+let history = [];  // {id,name,dept,deptName,color,temp,startAt,endAt,endedAt,outcome:'expired'|'reset'|'removed'}
+let depts = [];    // {id,name,icon}
+let curDept = 'kitchen';
+let settings = { autoReset: false, sound: true, sort: 'name', maxTemp: 70, hours: 4, wake: true };
 let addColor = 'slate';
 let colorEditId = null;
-let menuOpen = false;
-let enterId = null;
-const FOUR_HOURS = 4 * 3600;
+let enterId = null, enterAll = false;
+let curTab = 'kitchen';
+let histFilter = 'all';
 const DUE_SOON = 30 * 60;
 const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DEFAULT_DEPTS = [
+  { id: 'kitchen', name: 'Kitchen', icon: 'chef' },
+  { id: 'prep',    name: 'Prep',    icon: 'knife' },
+  { id: 'storage', name: 'Storage', icon: 'box' },
+  { id: 'service', name: 'Service', icon: 'cloche' }
+];
 
 const $ = id => document.getElementById(id);
 const STORE = 'kitchenTimersV4';
 const NAME_STORE = 'kitchenRestName';
-const DEPT_STORE = 'kitchenDeptName';
+const OLD_DEPT_STORE = 'kitchenDeptName';
+const DEPTS_STORE = 'kitchenDepts';
+const CUR_DEPT_STORE = 'kitchenCurDept';
+const HIST_STORE = 'kitchenHistory';
 const SET_STORE = 'kitchenSettings';
 const timeEls = new Map();
 const barEls = new Map();
 
+function holdSecs() { return settings.hours * 3600; }
+function deptById(id) { return depts.find(d => d.id === id); }
+function deptName(id) { const d = deptById(id); return d ? d.name : 'Kitchen'; }
+
 /* ---------- persistence ---------- */
-function save() { try { localStorage.setItem(STORE, JSON.stringify(timers)); } catch (e) {} }
+function getJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } }
+function setJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+function save() { setJSON(STORE, timers); }
+function saveHistory() { setJSON(HIST_STORE, history); }
+function saveDepts() { setJSON(DEPTS_STORE, depts); try { localStorage.setItem(CUR_DEPT_STORE, curDept); } catch (e) {} }
+function saveSettings() { setJSON(SET_STORE, settings); }
+function loadSettings() {
+  const s = getJSON(SET_STORE, {});
+  settings.autoReset = !!s.autoReset; settings.sound = s.sound !== false;
+  settings.sort = ['name', 'color'].indexOf(s.sort) >= 0 ? s.sort : 'name';
+  settings.maxTemp = Number.isFinite(s.maxTemp) ? s.maxTemp : 70;
+  settings.hours = (Number.isFinite(s.hours) && s.hours >= 1 && s.hours <= 12) ? s.hours : 4;
+  settings.wake = s.wake !== false;
+}
+function loadDepts() {
+  depts = getJSON(DEPTS_STORE, null);
+  if (!Array.isArray(depts) || !depts.length) depts = DEFAULT_DEPTS.map(d => Object.assign({}, d));
+  let cur = null; try { cur = localStorage.getItem(CUR_DEPT_STORE); } catch (e) {}
+  if (!cur) {
+    // first run of the tabbed version: carry over the old free-text department name
+    let old = ''; try { old = (localStorage.getItem(OLD_DEPT_STORE) || '').trim(); } catch (e) {}
+    if (old) {
+      const match = depts.find(d => d.name.toLowerCase() === old.toLowerCase());
+      if (match) cur = match.id;
+      else { const d = { id: uid(), name: old, icon: 'tag' }; depts.push(d); cur = d.id; }
+    }
+  }
+  curDept = deptById(cur) ? cur : depts[0].id;
+  saveDepts();
+}
 function load() {
-  try {
-    const data = JSON.parse(localStorage.getItem(STORE) || '[]');
-    const now = Date.now();
-    data.forEach(t => {
-      if (!t.color) t.color = 'slate';
-      if (!t.created) t.created = t.startAt || now;
-      if (!t.name) t.name = 'Food';
-      // repair legacy/corrupt running timers that lack endAt so they don't render NaN and never ring
-      if (t.state === 'running' && !t.endAt) {
-        const secs = Number.isFinite(t.remaining) ? t.remaining : t.total;
-        t.startAt = t.startAt || now; t.endAt = now + secs * 1000;
-      }
-      if (t.state === 'running' && t.endAt) {
-        t.remaining = Math.max(0, Math.round((t.endAt - now) / 1000));
-        if (t.remaining === 0) t.state = 'ringing';
-      }
-    });
-    timers = data;
-  } catch (e) { timers = []; }
+  const data = getJSON(STORE, []);
+  const now = Date.now();
+  history = getJSON(HIST_STORE, []);
+  (Array.isArray(data) ? data : []).forEach(t => {
+    if (!t.color) t.color = 'slate';
+    if (!t.created) t.created = t.startAt || now;
+    if (!t.name) t.name = 'Food';
+    if (!t.dept || !deptById(t.dept)) t.dept = curDept;
+    // repair legacy/corrupt running timers that lack endAt so they don't render NaN and never ring
+    if (t.state === 'running' && !t.endAt) {
+      const secs = Number.isFinite(t.remaining) ? t.remaining : t.total;
+      t.startAt = t.startAt || now; t.endAt = now + secs * 1000;
+    }
+    if (t.state === 'running' && t.endAt) {
+      t.remaining = Math.max(0, Math.round((t.endAt - now) / 1000));
+      if (t.remaining === 0) t.state = 'ringing';
+    }
+    if (t.state !== 'running' && !t.logged) logRun(t, 'expired', t.endAt, true);
+  });
+  timers = Array.isArray(data) ? data : [];
+  save(); saveHistory();
 }
 function loadName() { try { $('restName').value = localStorage.getItem(NAME_STORE) || ''; } catch (e) {} }
 function saveName() { try { localStorage.setItem(NAME_STORE, $('restName').value); } catch (e) {} }
-function loadDept() { try { $('deptName').value = localStorage.getItem(DEPT_STORE) || ''; } catch (e) {} }
-function saveDept() { try { localStorage.setItem(DEPT_STORE, $('deptName').value); } catch (e) {} }
-function loadSettings() {
-  try { const s = JSON.parse(localStorage.getItem(SET_STORE) || '{}');
-    settings.autoReset = !!s.autoReset; settings.sound = s.sound !== false;
-    settings.sort = ['name', 'color'].indexOf(s.sort) >= 0 ? s.sort : 'name';
-  } catch (e) {}
+
+/* ---------- history log ---------- */
+function logRun(t, outcome, at, quiet) {
+  if (t.logged) return;
+  t.logged = true;
+  history.unshift({
+    id: uid(), name: t.name, dept: t.dept, deptName: deptName(t.dept), color: t.color,
+    temp: t.temp, startAt: t.startAt, endAt: t.endAt, endedAt: at || Date.now(), outcome
+  });
+  if (history.length > 3000) history.length = 3000;
+  if (!quiet) { saveHistory(); if (curTab === 'history') renderHistory(); }
 }
-function saveSettings() { try { localStorage.setItem(SET_STORE, JSON.stringify(settings)); } catch (e) {} }
 
 /* ---------- sheets / pop-ups ---------- */
 function showOverlay(id) { const o = $(id); o.classList.remove('closing'); o.classList.add('show'); }
 function hideOverlay(id) {
   const o = $(id); if (!o.classList.contains('show')) return;
+  o.querySelectorAll('input').forEach(i => i.blur());
   if (reducedMotion) { o.classList.remove('show'); return; }
   o.classList.add('closing');
   setTimeout(() => o.classList.remove('show', 'closing'), 230);
 }
+function openSheet(html) { $('sheetBody').innerHTML = html; hydrateIcons($('sheetBody')); showOverlay('sheet'); }
+function closeSheet() { hideOverlay('sheet'); }
 
 /* ---------- swatches ---------- */
 function buildSwatches(containerId, selected, onPick) {
@@ -435,22 +649,24 @@ function buildSwatches(containerId, selected, onPick) {
 function pickAddColor(key) { addColor = key; buildSwatches('addSwatchRow', addColor, pickAddColor); }
 function openAdd() {
   $('foodName').value = ''; $('foodTemp').value = '';
+  $('addNote').innerHTML = `Timer is set to <b>${settings.hours} hour${settings.hours === 1 ? '' : 's'}</b> · ${esc(deptName(curDept))}`;
+  $('startBtn').textContent = `Start ${settings.hours}h Timer`;
   addColor = 'slate'; buildSwatches('addSwatchRow', addColor, pickAddColor);
   showOverlay('overlay'); unlockAudio();
   setTimeout(() => $('foodName').focus(), 50);
 }
-function closeAdd() { $('foodName').blur(); $('foodTemp').blur(); hideOverlay('overlay'); }
+function closeAdd() { hideOverlay('overlay'); }
 function startTimer() {
   const name = $('foodName').value.trim() || 'Food';
-  const total = FOUR_HOURS;
+  const total = holdSecs();
   const tempRaw = $('foodTemp').value.trim();
   const temp = tempRaw === '' ? null : Number(tempRaw);
   const now = Date.now();
   const id = uid();
   timers.push({
-    id, name, total, remaining: total, state: 'running',
+    id, name, dept: curDept, total, remaining: total, state: 'running',
     startAt: now, endAt: now + total * 1000, created: now,
-    temp: (temp != null && !isNaN(temp)) ? temp : null, color: addColor
+    temp: (temp != null && !isNaN(temp)) ? temp : null, color: addColor, logged: false
   });
   enterId = id;
   save(); closeAdd(); render();
@@ -464,30 +680,33 @@ function openColor(id, e) {
   buildSwatches('cardSwatchRow', cur, function (key) {
     const t = timers.find(x => x.id === colorEditId);
     if (t) { t.color = key; save(); render(); }
-    closeColor();
+    hideOverlay('colorOverlay');
   });
   showOverlay('colorOverlay');
 }
-function closeColor() { hideOverlay('colorOverlay'); }
 
-/* ---------- controls ---------- */
+/* ---------- card controls ---------- */
+function newRun(t) {
+  const now = Date.now();
+  t.total = holdSecs(); t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000;
+  t.state = 'running'; t.logged = false;
+}
 function restart(id) {
   const t = timers.find(x => x.id === id); if (!t) return;
-  const now = Date.now();
-  t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000; t.state = 'running';
-  save(); render();
+  if (t.state === 'running') logRun(t, 'reset');
+  newRun(t); save(); render();
 }
 function stopRing(id) {
   const t = timers.find(x => x.id === id); if (!t) return;
-  if (settings.autoReset) {
-    const now = Date.now();
-    t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000; t.state = 'running';
-  } else { t.state = 'done'; t.remaining = 0; }
+  if (settings.autoReset) newRun(t);
+  else { t.state = 'done'; t.remaining = 0; }
   if (!timers.some(x => x.state === 'ringing')) stopAlarm();   // silence immediately, don't wait for the tick
   save(); render();
 }
 function del(id, btn) {
   const remove = () => {
+    const t = timers.find(x => x.id === id);
+    if (t && t.state === 'running') logRun(t, 'removed');
     timers = timers.filter(x => x.id !== id);
     if (!timers.some(x => x.state === 'ringing')) stopAlarm();
     save(); render();
@@ -515,19 +734,24 @@ function clock(ms) {
   return `${h}:${String(m).padStart(2, '0')} ${ap}`;
 }
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 function dateStr(ms, short) { const d = new Date(ms); return `${MONTHS[d.getMonth()]} ${d.getDate()}` + (short ? '' : `, ${d.getFullYear()}`); }
 function barColor(rem) { return rem > DUE_SOON ? '#22c55e' : (rem > 600 ? '#f59e0b' : '#dc2626'); }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function uid() { return Date.now().toString(36) + '-' + Math.floor(performance.now()).toString(36) + '-' + (uid._n = (uid._n || 0) + 1); }
+function hydrateIcons(root) { (root || document).querySelectorAll('[data-ic]').forEach(el => { el.innerHTML = icon(el.dataset.ic); el.removeAttribute('data-ic'); }); }
 
-/* ---------- render ---------- */
+/* ---------- render: kitchen ---------- */
 function render() {
   const wrap = $('timers');
   // remember where each card was so the rest can glide to their new spots (FLIP)
   const before = new Map();
-  if (!reducedMotion) wrap.querySelectorAll('.card').forEach(c => before.set(c.dataset.id, c.getBoundingClientRect()));
+  if (!reducedMotion && !enterAll) wrap.querySelectorAll('.card').forEach(c => before.set(c.dataset.id, c.getBoundingClientRect()));
   timeEls.clear(); barEls.clear();
-  $('empty').style.display = timers.length ? 'none' : 'block';
-  $('itemCount').textContent = timers.length + (timers.length === 1 ? ' item' : ' items');
-  const order = timers.slice().sort((a, b) => settings.sort === 'color'
+  const mine = timers.filter(t => t.dept === curDept);
+  $('empty').style.display = mine.length ? 'none' : 'block';
+  $('itemCount').textContent = mine.length + (mine.length === 1 ? ' item' : ' items');
+  const order = mine.sort((a, b) => settings.sort === 'color'
     ? (COLOR_ORDER.indexOf(a.color) - COLOR_ORDER.indexOf(b.color)) || (a.name || '').localeCompare(b.name || '')
     : (a.name || '').localeCompare(b.name || ''));
   wrap.innerHTML = '';
@@ -535,7 +759,8 @@ function render() {
     const col = colorOf(t);
     const card = document.createElement('div');
     card.dataset.id = t.id;
-    card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '') + (t.id === enterId && !reducedMotion ? ' enter' : '');
+    const entering = !reducedMotion && (enterAll || t.id === enterId);
+    card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '') + (entering ? ' enter' : '');
     if (t.state !== 'ringing') {   // expired cards keep their red ring/tint from CSS
       card.style.setProperty('--ring', col.bd);
       card.style.setProperty('--tint', col.tint);
@@ -559,10 +784,11 @@ function render() {
       w = (t.remaining / t.total * 100); c = barColor(t.remaining);
     }
     const tempVal = (t.temp != null) ? (t.temp + '°F') : '—';
+    const hot = t.temp != null && t.temp > settings.maxTemp;
     card.innerHTML =
       `<div class="chead"><div class="cleft">` +
         `<div class="cname"><button class="cdot" style="background:${dotOf(t.color)}" onclick="openColor('${t.id}',event)" aria-label="Change color"></button><span style="color:${col.ac}">${esc(t.name)}</span></div>` +
-        (t.temp != null ? `<div class="csub">Started at ${esc(t.temp)}°F</div>` : '') +
+        (t.temp != null ? `<div class="csub${hot ? ' hot' : ''}">Started at ${esc(t.temp)}°F${hot ? ` · above ${settings.maxTemp}°F` : ''}</div>` : '') +
       `</div>${pill}</div>` +
       `<div class="trow"><span class="ctime">${label}</span>${rem}</div>` +
       `<div class="pbar"><div class="pfill" style="width:${w}%;background:${c}"></div></div>` +
@@ -575,8 +801,9 @@ function render() {
     timeEls.set(t.id, card.querySelector('.ctime'));
     barEls.set(t.id, card.querySelector('.pfill'));
   });
-  enterId = null;
+  enterId = null; enterAll = false;
   layoutGrid();
+  renderAlerts();
   if (before.size) {
     wrap.querySelectorAll('.card').forEach(el => {
       const f = before.get(el.dataset.id); if (!f || !el.animate) return;
@@ -587,9 +814,243 @@ function render() {
       }
     });
   }
+  if (curTab === 'settings') renderSettings();
 }
-function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-function uid() { return Date.now().toString(36) + '-' + Math.floor(performance.now()).toString(36) + '-' + (uid._n = (uid._n || 0) + 1); }
+
+/* header labels, rules text, expired-elsewhere alerts, tab badge */
+function renderAlerts() {
+  const name = deptName(curDept);
+  $('deptLabel').textContent = name;
+  $('tabKitchenLabel').textContent = name;
+  $('ruleTemp').textContent = `Temp must not exceed ${settings.maxTemp}°F`;
+  $('ruleTime').textContent = `Discard after ${settings.hours} hour${settings.hours === 1 ? '' : 's'}`;
+  const ringing = timers.filter(t => t.state === 'ringing');
+  const elsewhere = ringing.filter(t => t.dept !== curDept);
+  $('deptDot').classList.toggle('show', elsewhere.length > 0);
+  const badge = $('tabBadge');
+  badge.textContent = ringing.length; badge.classList.toggle('show', ringing.length > 0 && curTab !== 'kitchen' || elsewhere.length > 0);
+  const alert = $('deptAlert');
+  if (elsewhere.length) {
+    const target = elsewhere[0].dept;
+    const names = [...new Set(elsewhere.map(t => deptName(t.dept)))];
+    $('deptAlertText').textContent = `⚠ ${elsewhere.length} expired item${elsewhere.length === 1 ? '' : 's'} in ${names.join(', ')}`;
+    $('deptAlertBtn').onclick = () => switchDept(target);
+    alert.classList.add('show');
+  } else alert.classList.remove('show');
+}
+
+/* ---------- departments ---------- */
+function switchDept(id, stay) {
+  if (!deptById(id)) return;
+  if (id !== curDept) { curDept = id; saveDepts(); enterAll = true; }
+  closeSheet();
+  if (!stay && curTab !== 'kitchen') showTab('kitchen');
+  render();
+}
+function deptRows(withEdit) {
+  return depts.map(d => {
+    const n = timers.filter(t => t.dept === d.id).length;
+    const ring = timers.filter(t => t.dept === d.id && t.state === 'ringing').length;
+    const sel = d.id === curDept;
+    return `<div class="row${sel ? ' sel' : ''}" onclick="switchDept('${d.id}', ${withEdit})">` +
+      `<span class="ric">${icon(d.icon || 'tag')}</span><span class="rtxt rname">${esc(d.name)}</span>` +
+      (ring ? `<span class="badge-n red">${ring} expired</span>` : (n ? `<span class="badge-n">${n}</span>` : '')) +
+      (sel ? `<span class="rcheck">${icon('check')}</span>` : '') +
+      (withEdit ? `<button class="edit-btn" onclick="event.stopPropagation();openDeptEdit('${d.id}')" aria-label="Edit">${icon('pencil')}</button>` : '') +
+    `</div>`;
+  }).join('') +
+  `<div class="row blue" onclick="openDeptEdit(null)"><span class="ric">${icon('plus')}</span><span class="rtxt">Add Department</span></div>`;
+}
+function openDeptSheet() {
+  openSheet(`<h2>Department</h2><p class="fixed-note">Each department keeps its own food cards.</p><div class="group">${deptRows(false)}</div>` +
+    `<div class="actions"><button class="btn ghost press" onclick="closeSheet()">Close</button></div>`);
+}
+function openDeptEdit(id) {
+  const d = id ? deptById(id) : null;
+  const n = d ? timers.filter(t => t.dept === d.id).length : 0;
+  openSheet(`<h2>${d ? 'Edit Department' : 'Add Department'}</h2><p class="fixed-note">${d ? (n ? `${n} card${n === 1 ? '' : 's'} in this department` : 'No cards in this department') : 'e.g. Bar, Grill, Front Counter'}</p>` +
+    `<label>Name</label><input type="text" id="deptInput" autocomplete="off" maxlength="30" value="${d ? esc(d.name) : ''}" placeholder="Department name">` +
+    `<div class="actions"><button class="btn ghost press" onclick="closeSheet()">Cancel</button><button class="btn blue press" onclick="saveDeptEdit(${d ? `'${d.id}'` : 'null'})">Save</button></div>` +
+    (d && depts.length > 1 ? `<div class="actions"><button class="btn red press" onclick="deleteDept('${d.id}')">Delete Department</button></div>` : ''));
+  const inp = $('deptInput');
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveDeptEdit(d ? d.id : null); });
+  setTimeout(() => inp.focus(), 60);
+}
+function saveDeptEdit(id) {
+  const name = ($('deptInput').value || '').trim();
+  if (!name) { $('deptInput').focus(); return; }
+  if (id) { const d = deptById(id); if (d) d.name = name; }
+  else { const d = { id: uid(), name, icon: guessIcon(name) }; depts.push(d); curDept = d.id; enterAll = true; }
+  saveDepts(); closeSheet(); render(); renderSettings();
+}
+function guessIcon(name) {
+  const n = name.toLowerCase();
+  if (/kitchen|cook|grill|line|hot/.test(n)) return 'chef';
+  if (/prep|cut|butcher/.test(n)) return 'knife';
+  if (/stor|walk|fridge|cooler|freez|pantry/.test(n)) return 'box';
+  if (/serv|front|counter|bar|buffet|expo/.test(n)) return 'cloche';
+  return 'tag';
+}
+function deleteDept(id) {
+  const d = deptById(id); if (!d || depts.length < 2) return;
+  const n = timers.filter(t => t.dept === id).length;
+  if (!confirm(n ? `Delete "${d.name}" and its ${n} card${n === 1 ? '' : 's'}?` : `Delete "${d.name}"?`)) return;
+  timers.filter(t => t.dept === id && t.state === 'running').forEach(t => logRun(t, 'removed'));
+  timers = timers.filter(t => t.dept !== id);
+  depts = depts.filter(x => x.id !== id);
+  if (curDept === id) curDept = depts[0].id;
+  if (!timers.some(x => x.state === 'ringing')) stopAlarm();
+  save(); saveHistory(); saveDepts(); closeSheet(); render(); renderSettings();
+}
+
+/* ---------- tabs ---------- */
+const TABS = ['kitchen', 'history', 'settings'];
+function showTab(name) {
+  if (TABS.indexOf(name) < 0) name = 'kitchen';
+  const changed = name !== curTab;
+  curTab = name;
+  $('viewKitchen').classList.toggle('on', name === 'kitchen');
+  $('viewHistory').classList.toggle('on', name === 'history');
+  $('viewSettings').classList.toggle('on', name === 'settings');
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  $('tabInd').style.transform = `translateX(${TABS.indexOf(name) * 100}%)`;
+  if (name === 'history') renderHistory();
+  if (name === 'settings') renderSettings();
+  if (name === 'kitchen') layoutGrid();
+  renderAlerts();
+  if (changed) window.scrollTo(0, 0);
+}
+
+/* ---------- history ---------- */
+const OUTCOME = {
+  expired: { cls: 'exp',   label: 'Discard' },
+  reset:   { cls: 'reset', label: 'Reset' },
+  removed: { cls: 'done',  label: 'Removed' }
+};
+function dayLabel(ms) {
+  const d = new Date(ms), t = new Date();
+  const start = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((start(t) - start(d)) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+function renderHistory() {
+  const used = new Set(history.map(h => h.dept));
+  const chipDepts = depts.filter(d => used.has(d.id));
+  if (histFilter !== 'all' && !chipDepts.some(d => d.id === histFilter)) histFilter = 'all';
+  $('histChips').innerHTML = [`<button class="chip${histFilter === 'all' ? ' on' : ''}" onclick="setHistFilter('all')">All</button>`]
+    .concat(chipDepts.map(d => `<button class="chip${histFilter === d.id ? ' on' : ''}" onclick="setHistFilter('${d.id}')">${esc(d.name)}</button>`)).join('');
+  $('histChips').style.display = chipDepts.length > 1 ? 'flex' : 'none';
+  const list = history.filter(h => histFilter === 'all' || h.dept === histFilter);
+  if (!list.length) {
+    $('histList').innerHTML = `<div class="empty glass" style="margin:18px 0">No history yet.<br><span style="font-size:15px">Items are logged here when they expire, are reset, or are removed.</span></div>`;
+    return;
+  }
+  let html = '', lastDay = '';
+  list.forEach((h, i) => {
+    const day = dayLabel(h.endedAt);
+    if (day !== lastDay) { html += (lastDay ? '</div>' : '') + `<div class="glabel">${day}</div><div class="group glass">`; lastDay = day; }
+    const o = OUTCOME[h.outcome] || OUTCOME.removed;
+    const temp = h.temp != null ? ` · ${esc(h.temp)}°F` : '';
+    const hot = h.temp != null && h.temp > settings.maxTemp;
+    html += `<div class="row static">` +
+      `<span class="hrow-dot" style="background:${dotOf(h.color)}"></span>` +
+      `<span class="rtxt"><span class="hname">${esc(h.name)}</span>` +
+      `<div class="rsub">${esc(h.deptName || deptName(h.dept))} · ${clock(h.startAt)} → ${clock(h.endAt)}<span${hot ? ' style="color:#dc2626;font-weight:700"' : ''}>${temp}</span></div></span>` +
+      `<span class="hright"><span class="pill ${o.cls}">${o.label}</span><span class="htime">${clock(h.endedAt)}</span></span>` +
+    `</div>`;
+  });
+  $('histList').innerHTML = html + '</div>';
+}
+function setHistFilter(f) { histFilter = f; renderHistory(); }
+function exportHistory() {
+  if (!history.length) { alert('No history to export yet.'); return; }
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const d = ms => { const x = new Date(ms); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  const rows = [['Date', 'Department', 'Food', 'Start time', 'Start temp (F)', 'Discard time', 'Ended at', 'Outcome']];
+  history.slice().reverse().forEach(h => rows.push([d(h.startAt), h.deptName || deptName(h.dept), h.name, clock(h.startAt), h.temp == null ? '' : h.temp, clock(h.endAt), clock(h.endedAt), (OUTCOME[h.outcome] || OUTCOME.removed).label]));
+  const blob = new Blob([rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `time-temp-log-${d(Date.now())}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function clearHistory() {
+  if (!history.length) return;
+  if (!confirm('Delete ALL history? This cannot be undone.')) return;
+  history = []; saveHistory(); renderHistory();
+}
+
+/* ---------- settings ---------- */
+function renderSettings() {
+  $('valTemp').textContent = settings.maxTemp + '°F';
+  $('valHours').textContent = settings.hours + (settings.hours === 1 ? ' hour' : ' hours');
+  $('deptList').innerHTML = deptRows(true);
+  $('swSound').classList.toggle('on', settings.sound);
+  $('swAutoReset').classList.toggle('on', settings.autoReset);
+  $('swWake').classList.toggle('on', settings.wake);
+  $('wakeSub').textContent = ('wakeLock' in navigator) ? 'Screen stays on while the app is open' : 'Not supported on this browser — set Auto-Lock to Never';
+  $('fsLabel').textContent = fsElement() ? 'Exit Fullscreen' : 'Fullscreen';
+  $('installSub').textContent = isStandalone() ? 'Installed ✓' : 'Add to your home screen';
+  $('subFinished').textContent = `In ${deptName(curDept)}`;
+  $('lblClearAll').textContent = `Clear All Cards in ${deptName(curDept)}`;
+}
+function toggleSetting(key) {
+  settings[key] = !settings[key]; saveSettings(); renderSettings();
+  if (key === 'wake') applyWakeLock();
+}
+let sheetVal = 0;
+function stepperSheet(title, note, value, unit, min, max, onSave) {
+  sheetVal = value;
+  openSheet(`<h2>${title}</h2><p class="fixed-note">${note}</p>` +
+    `<div class="stepper"><button class="press" id="stMinus">−</button><span class="sv" id="stVal"></span><button class="press" id="stPlus">+</button></div>` +
+    `<div class="actions"><button class="btn ghost press" onclick="closeSheet()">Cancel</button><button class="btn blue press" id="stSave">Save</button></div>`);
+  const paint = () => { $('stVal').textContent = unit(sheetVal); };
+  $('stMinus').onclick = () => { sheetVal = Math.max(min, sheetVal - 1); paint(); };
+  $('stPlus').onclick = () => { sheetVal = Math.min(max, sheetVal + 1); paint(); };
+  $('stSave').onclick = () => { onSave(sheetVal); closeSheet(); };
+  paint();
+}
+function openTempSheet() {
+  stepperSheet('Max Temperature', 'Food above this start temperature is flagged in red.', settings.maxTemp, v => v + '°F', 32, 212,
+    v => { settings.maxTemp = v; saveSettings(); render(); renderSettings(); });
+}
+function openHoursSheet() {
+  stepperSheet('Discard After', 'Applies to new timers and resets. Running timers keep their time.', settings.hours, v => v + (v === 1 ? ' hr' : ' hrs'), 1, 12,
+    v => { settings.hours = v; saveSettings(); render(); renderSettings(); });
+}
+
+/* ---------- install as app ---------- */
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; });
+function isStandalone() { return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
+function openInstall() {
+  if (isStandalone()) { openSheet(`<h2>Installed ✓</h2><p class="fixed-note">You're using the app from your home screen.</p><div class="actions"><button class="btn ghost press" onclick="closeSheet()">Close</button></div>`); return; }
+  if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; }); return; }
+  const ua = navigator.userAgent;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const steps = ios
+    ? '<ol><li>Open this page in <b>Safari</b></li><li>Tap the <b>Share</b> button (square with arrow)</li><li>Tap <b>Add to Home Screen</b>, then <b>Add</b></li></ol>'
+    : /Android/.test(ua)
+      ? '<ol><li>Open this page in <b>Chrome</b></li><li>Tap the <b>⋮</b> menu</li><li>Tap <b>Install app</b> (or Add to Home screen)</li></ol>'
+      : '<ol><li><b>Chrome / Edge:</b> click the install icon at the right of the address bar</li><li><b>Safari on Mac:</b> File → <b>Add to Dock</b></li></ol>';
+  openSheet(`<h2>Install as App</h2><p class="fixed-note">Opens full screen with its own icon and works offline.</p>${steps}` +
+    `<p class="fixed-note" style="margin-bottom:14px">Tip: install before a shift — the app keeps its own saved timers.</p>` +
+    `<div class="actions"><button class="btn blue press" onclick="closeSheet()">Got it</button></div>`);
+}
+
+/* ---------- keep screen awake ---------- */
+let wakeLock = null;
+async function applyWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    if (settings.wake && document.visibilityState === 'visible') {
+      if (!wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    } else if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) { wakeLock = null; }
+}
 
 /* ---------- tick ---------- */
 setInterval(() => {
@@ -604,7 +1065,7 @@ setInterval(() => {
         const el = timeEls.get(t.id); if (el) el.textContent = fmt(rem);
         const bar = barEls.get(t.id); if (bar) { bar.style.width = (rem / t.total * 100) + '%'; bar.style.background = barColor(rem); }
       }
-      if (rem === 0) { t.state = 'ringing'; save(); needRender = true; }
+      if (rem === 0) { t.state = 'ringing'; logRun(t, 'expired', t.endAt); save(); needRender = true; }
     }
   });
   if (needRender) render();
@@ -635,26 +1096,7 @@ function beep(force) {
 }
 function startAlarm() { unlockAudio(); if (alarmTimer) return; beep(); alarmTimer = setInterval(beep, 700); }
 function stopAlarm() { if (alarmTimer) { clearInterval(alarmTimer); alarmTimer = null; } }
-
-/* ---------- menu ---------- */
-function toggleMenu(e) { if (e) e.stopPropagation(); unlockAudio(); menuOpen ? closeMenu() : openMenu(); }
-function openMenu() {
-  menuOpen = true; updateMenu();
-  const r = $('menuBtn').getBoundingClientRect(), p = $('menuPanel');
-  p.style.top = Math.max(12, r.bottom + 10) + 'px';
-  p.style.right = Math.max(12, window.innerWidth - r.right) + 'px';
-  p.classList.add('show'); $('menuBackdrop').classList.add('show');
-}
-function closeMenu() { menuOpen = false; $('menuPanel').classList.remove('show'); $('menuBackdrop').classList.remove('show'); }
-function updateMenu() {
-  $('swAutoReset').classList.toggle('on', settings.autoReset);
-  $('swSound').classList.toggle('on', settings.sound);
-  $('fsLabel').textContent = fsElement() ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
-}
-function toggleAutoReset(e) { if (e) e.stopPropagation(); settings.autoReset = !settings.autoReset; saveSettings(); updateMenu(); }
-function toggleSound(e) { if (e) e.stopPropagation(); settings.sound = !settings.sound; saveSettings(); updateMenu(); }
 function menuTestSound() {
-  closeMenu();
   if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
   if (!audioCtx) return;
   // Play a silent buffer synchronously to unlock iOS AudioContext within the gesture
@@ -665,30 +1107,40 @@ function menuTestSound() {
   } catch(e) {}
   audioCtx.resume().then(() => { beep(true); setTimeout(() => beep(true), 700); });
 }
+
+/* ---------- fullscreen + bulk actions ---------- */
 function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function menuFullscreen() {
-  closeMenu();
   try {
     const el = document.documentElement;
     if (!fsElement()) {
       const req = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen || el.msRequestFullscreen;
       if (req) { req.call(el); }
-      else { alert('This browser blocks full screen. Tip: use the browser menu → "Add to Home Screen", then open the app from that icon — it runs full screen.'); }
+      else { openInstall(); }   // iPhone/iPad Safari has no fullscreen API — installing the app is the way
     } else {
       const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
       if (exit) { exit.call(document); }
     }
   } catch (e) {}
 }
-function menuDeleteFinished() { timers = timers.filter(t => t.state !== 'done'); save(); render(); closeMenu(); }
+function menuDeleteFinished() {
+  const n = timers.filter(t => t.dept === curDept && t.state === 'done').length;
+  if (!n) { alert('No finished cards in ' + deptName(curDept) + '.'); return; }
+  timers = timers.filter(t => !(t.dept === curDept && t.state === 'done')); save(); render();
+}
 function menuClearAll() {
-  if (timers.length && confirm('Delete ALL food cards? This cannot be undone.')) { timers = []; stopAlarm(); save(); render(); }
-  closeMenu();
+  const mine = timers.filter(t => t.dept === curDept);
+  if (!mine.length) { alert('No cards in ' + deptName(curDept) + '.'); return; }
+  if (!confirm(`Delete all ${mine.length} card${mine.length === 1 ? '' : 's'} in ${deptName(curDept)}? This cannot be undone.`)) return;
+  mine.filter(t => t.state === 'running').forEach(t => logRun(t, 'removed'));
+  timers = timers.filter(t => t.dept !== curDept);
+  if (!timers.some(x => x.state === 'ringing')) stopAlarm();
+  save(); saveHistory(); render();
 }
 
 /* ---------- grid: 1 column on phones, 2 on tablet portrait, 3 on landscape / desktop ---------- */
 function layoutGrid() {
-  const grid = $('timers'); if (!grid) return;
+  const grid = $('timers'); if (!grid || !grid.offsetParent) return;
   const w = window.innerWidth;
   const cols = w >= 1000 ? 3 : (w >= 640 ? 2 : 1);
   const cs = getComputedStyle(grid);
@@ -714,24 +1166,28 @@ function layoutGrid() {
 
 /* ---------- listeners ---------- */
 document.body.addEventListener('touchstart', unlockAudio);
-document.body.addEventListener('click', unlockAudio);
+document.body.addEventListener('click', () => { unlockAudio(); if (settings.wake && !wakeLock) applyWakeLock(); });
 $('restName').addEventListener('input', saveName);
-$('deptName').addEventListener('input', saveDept);
 $('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 $('foodTemp').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
-$('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeAdd(); });
-$('colorOverlay').addEventListener('click', e => { if (e.target === $('colorOverlay')) closeColor(); });
-function onFsChange() { layoutGrid(); if (menuOpen) updateMenu(); }
+['overlay', 'colorOverlay', 'sheet'].forEach(id => $(id).addEventListener('click', e => { if (e.target === $(id)) hideOverlay(id); }));
+function onFsChange() { layoutGrid(); if (curTab === 'settings') renderSettings(); }
 document.addEventListener('fullscreenchange', onFsChange);
 document.addEventListener('webkitfullscreenchange', onFsChange);
+document.addEventListener('visibilitychange', applyWakeLock);
 window.addEventListener('resize', layoutGrid);
 window.addEventListener('orientationchange', layoutGrid);
 
 /* ---------- boot ---------- */
-loadSettings(); loadName(); loadDept(); load();
+hydrateIcons(document);
+loadSettings(); loadName(); loadDepts(); load();
 $('sortSel').value = settings.sort;
 render();
+applyWakeLock();
 if (timers.some(t => t.state === 'ringing')) startAlarm();
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
