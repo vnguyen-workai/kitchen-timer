@@ -1,6 +1,6 @@
 // Offline support: always try the network first (so updates show up right away),
 // fall back to the saved copy when the restaurant Wi-Fi is down.
-const CACHE = 'kitchen-log-v2';
+const CACHE = 'kitchen-log-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
