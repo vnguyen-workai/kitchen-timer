@@ -111,14 +111,42 @@
   }
   .add-btn .plus { font-size: 22px; line-height: 1; margin-top: -2px; }
 
-  /* alert for expired items in other departments */
-  .dept-alert {
-    display: none; align-items: center; justify-content: space-between; gap: 12px;
-    margin: 14px 16px 0; padding: 12px 14px 12px 18px; border-radius: 20px;
-    background: rgba(254,226,226,.75) !important; color: #b91c1c; font-weight: 700; font-size: 15px;
+  /* ---------- iOS-style notification banner (expired food / sound reminder) ---------- */
+  .notice {
+    position: fixed; left: 0; right: 0; top: calc(10px + var(--safe-t)); z-index: 40; margin: 0 auto;
+    width: min(440px, calc(100% - 20px)); cursor: pointer;
+    visibility: hidden; transform: translateY(calc(-100% - 24px));
+    transition: transform .45s var(--spring), visibility 0s .45s;
   }
-  .dept-alert.show { display: flex; animation: viewIn .4s var(--spring) both; }
-  .dept-alert button { font: inherit; font-size: 15px; font-weight: 700; border: none; border-radius: 999px; padding: 9px 16px; background: #dc2626; color: #fff; cursor: pointer; white-space: nowrap; }
+  .notice.show { visibility: visible; transform: none; transition: transform .6s var(--spring); }
+  .notice-card {
+    position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 14px 13px; border-radius: 24px;
+    background: rgba(246,246,248,.82);
+    -webkit-backdrop-filter: blur(30px) saturate(190%); backdrop-filter: blur(30px) saturate(190%);
+    border: 1px solid rgba(255,255,255,.7);
+    box-shadow: 0 14px 40px rgba(15,23,42,.18), 0 2px 8px rgba(15,23,42,.08);
+  }
+  .notice:active .notice-card { transform: scale(.98); transition: transform .15s; }
+  /* a second card peeking out underneath when more than one item has expired */
+  .notice-behind { display: none; position: absolute; z-index: 0; left: 12px; right: 12px; top: 12px; bottom: -9px; border-radius: 22px; background: rgba(236,236,241,.88); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: 0 10px 24px rgba(15,23,42,.12); }
+  .notice.stack .notice-behind { display: block; }
+  .notice-icon { position: relative; flex-shrink: 0; width: 40px; height: 40px; margin-top: 1px; }
+  .notice-icon img { display: block; width: 40px; height: 40px; border-radius: 10px; }
+  .notice-badge { position: absolute; top: -6px; right: -7px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: #ff3b30; color: #fff; font-size: 12px; font-weight: 700; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 2px rgba(246,246,248,.95); }
+  .notice-badge.show { display: inline-flex; }
+  .notice-main { flex: 1; min-width: 0; }
+  .notice-top { display: flex; align-items: baseline; gap: 8px; }
+  .notice-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: #111; line-height: 1.3; overflow-wrap: anywhere; }
+  .notice-time { font-size: 13px; color: #8e8e93; white-space: nowrap; }
+  .notice-text { font-size: 15px; color: #3a3a3c; line-height: 1.3; margin-top: 2px; overflow-wrap: anywhere; }
+
+  /* ring that highlights the card the app just moved to */
+  .card.spotlight::after { content: ""; position: absolute; top: -7px; right: -7px; bottom: -7px; left: -7px; border-radius: 32px; border: 3px solid rgba(239,68,68,.8); pointer-events: none; animation: spot 1.4s ease-out forwards; }
+  @keyframes spot { 0% { opacity: 0; transform: scale(1.05); } 18% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+
+  /* iPhone/iPad only send taps on plain areas to the page when they look tappable */
+  @media (hover: none) { body { cursor: pointer; } }
 
   /* ---------- toolbar ---------- */
   .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 28px 4px; gap: 12px; }
@@ -246,14 +274,6 @@
   .hright .pill { padding: 5px 11px; font-size: 13px; }
   .htime { font-size: 13px; color: var(--muted); }
 
-  /* ---------- "tap to turn on alarm sound" pill (sits just above the tab bar) ---------- */
-  .sound-hint {
-    position: fixed; left: 0; right: 0; bottom: calc(96px + var(--safe-b)); z-index: 14; margin: 0 auto;
-    width: max-content; max-width: calc(100% - 24px); display: none; align-items: center; gap: 8px;
-    padding: 11px 18px; border-radius: 999px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
-    color: #92400e; background: rgba(254,243,199,.9) !important; border: 1px solid rgba(251,191,36,.7) !important;
-  }
-  .sound-hint.show { display: inline-flex; animation: viewIn .4s var(--spring) both; }
 
   /* ---------- tab bar ---------- */
   .tabbar {
@@ -319,7 +339,6 @@
     .dept-btn { font-size: 14px; letter-spacing: 1.5px; }
     .rules { flex-direction: column; align-items: flex-start; gap: 6px; }
     .add-btn { grid-column: 1; grid-row: auto; width: 100%; padding: 15px; margin-top: 14px; }
-    .dept-alert { margin: 12px 12px 0; }
     .toolbar { padding: 18px 18px 2px; }
     #timers { padding: 10px 12px 16px; gap: 14px; }
     .empty { margin: 14px 12px; }
@@ -357,8 +376,6 @@
     </div>
     <button class="add-btn press" onclick="openAdd()"><span class="plus">+</span> Add Food</button>
   </header>
-
-  <div class="dept-alert glass" id="deptAlert"><span id="deptAlertText"></span><button class="press" id="deptAlertBtn">View</button></div>
 
   <div class="toolbar">
     <div class="count" id="itemCount">0 items</div>
@@ -411,7 +428,7 @@
         <span class="ric" data-ic="bell"></span><span class="rtxt">Test Sound</span><span class="rchev" data-ic="chevR"></span>
       </div>
       <div class="row" onclick="toggleSetting('autoReset')">
-        <span class="ric" data-ic="reset"></span><span class="rtxt">Auto-reset<div class="rsub">Restart the timer after tapping Stop</div></span><span class="ios-sw" id="swAutoReset"></span>
+        <span class="ric" data-ic="reset"></span><span class="rtxt">Auto-reset<div class="rsub">When time is up: 3 beeps, then it counts down again</div></span><span class="ios-sw" id="swAutoReset"></span>
       </div>
       <div class="row" onclick="toggleSetting('wake')">
         <span class="ric" data-ic="tablet"></span><span class="rtxt">Keep Screen Awake<div class="rsub" id="wakeSub">Screen stays on while the app is open</div></span><span class="ios-sw" id="swWake"></span>
@@ -443,7 +460,17 @@
   </div>
 </main>
 
-<button class="sound-hint glass" id="soundHint" onclick="unlockAudio()">🔇 Tap to turn on alarm sound</button>
+<!-- iOS-style notification: "Beef in Kitchen has expired" (tap anywhere → go to that card) -->
+<div class="notice" id="notice" role="alert" aria-live="assertive">
+  <div class="notice-behind"></div>
+  <div class="notice-card">
+    <div class="notice-icon"><img src="apple-touch-icon.png" alt=""><span class="notice-badge" id="noticeBadge"></span></div>
+    <div class="notice-main">
+      <div class="notice-top"><span class="notice-title" id="noticeTitle"></span><span class="notice-time" id="noticeTime"></span></div>
+      <div class="notice-text" id="noticeText"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ================= TAB BAR ================= -->
 <nav class="tabbar glass" id="tabbar">
@@ -729,7 +756,7 @@ function openColor(id, e) {
 function newRun(t) {
   const now = Date.now();
   t.total = holdSecs(); t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000;
-  t.state = 'running'; t.logged = false; t.actedAt = now;
+  t.state = 'running'; t.logged = false; t.actedAt = now; delete t.autoRestartAt;
 }
 function restart(id) {
   const t = timers.find(x => x.id === id); if (!t) return;
@@ -742,7 +769,7 @@ function restart(id) {
 function stopRing(id) {
   const t = timers.find(x => x.id === id); if (!t || t.state !== 'ringing') return;
   if (settings.autoReset) newRun(t);
-  else { t.state = 'done'; t.remaining = 0; t.actedAt = Date.now(); }
+  else { t.state = 'done'; t.remaining = 0; t.actedAt = Date.now(); delete t.autoRestartAt; }
   if (!timers.some(x => x.state === 'ringing')) stopAlarm();   // silence immediately, don't wait for the tick
   save(); render();
 }
@@ -860,7 +887,7 @@ function render() {
   if (curTab === 'settings') renderSettings();
 }
 
-/* header labels, rules text, expired-elsewhere alerts, tab badge */
+/* header labels, rules text, expired-elsewhere dot, tab badge, notification */
 function renderAlerts() {
   const name = deptName(curDept);
   $('deptLabel').textContent = name;
@@ -872,14 +899,77 @@ function renderAlerts() {
   $('deptDot').classList.toggle('show', elsewhere.length > 0);
   const badge = $('tabBadge');
   badge.textContent = ringing.length; badge.classList.toggle('show', ringing.length > 0 && curTab !== 'kitchen' || elsewhere.length > 0);
-  const alert = $('deptAlert');
-  if (elsewhere.length) {
-    const target = elsewhere[0].dept;
-    const names = [...new Set(elsewhere.map(t => deptName(t.dept)))];
-    $('deptAlertText').textContent = `⚠ ${elsewhere.length} expired item${elsewhere.length === 1 ? '' : 's'} in ${names.join(', ')}`;
-    $('deptAlertBtn').onclick = () => switchDept(target);
-    alert.classList.add('show');
-  } else alert.classList.remove('show');
+  renderNotice();
+}
+
+/* ---------- iOS-style notification ---------- */
+let noticeKey = '', autoNotice = null;   // autoNotice: short "expired, restarted" note while Auto-reset is on
+// expired items that need a person to tap Stop (oldest first); auto-reset ones restart by themselves
+function urgentTimers() { return timers.filter(t => t.state === 'ringing' && !t.autoRestartAt).sort((a, b) => a.endAt - b.endAt); }
+function where(t) { return `${t.name} in ${deptName(t.dept)}`; }
+function agoText(ms) {
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  return s < 60 ? 'now' : s < 3600 ? `${Math.floor(s / 60)}m ago` : `${Math.floor(s / 3600)}h ago`;
+}
+function renderNotice() {
+  const urgent = urgentTimers();
+  let mode = '', title = '', text = '', when = 0;
+  if (urgent.length) {
+    const t = urgent[0], others = urgent.slice(1).map(where);
+    mode = 'urgent'; when = t.endAt;
+    title = `${where(t)} has expired`;
+    text = others.length
+      ? `Also expired: ${others.slice(0, 2).join(', ')}${others.length > 2 ? ` and ${others.length - 2} more` : ''}. Tap anywhere to go to ${t.name} first.`
+      : 'Tap anywhere to go to it, then tap Stop alarm.';
+  } else if (autoNotice && Date.now() < autoNotice.until) {
+    mode = 'auto'; when = autoNotice.at;
+    title = `${autoNotice.label} has expired`;
+    text = 'Auto-reset is on, so its timer started again.';
+  } else if (settings.sound && !audioReady() && timers.some(t => t.state === 'running')) {
+    // iPad/iPhone block all sound until the screen is touched once after the app opens
+    mode = 'sound';
+    title = 'Tap anywhere to allow the alarm sound';
+    text = 'Needed once each time the app opens, so you hear it when food expires.';
+  }
+  const key = [mode, title, text, urgent.length, when ? agoText(when) : ''].join('|');
+  if (key === noticeKey) return;
+  noticeKey = key;
+  const n = $('notice');
+  if (!mode) { n.classList.remove('show'); return; }
+  $('noticeTitle').textContent = title;
+  $('noticeText').textContent = text;
+  $('noticeTime').textContent = when ? agoText(when) : '';
+  $('noticeBadge').textContent = urgent.length;
+  $('noticeBadge').classList.toggle('show', urgent.length > 1);
+  n.classList.toggle('stack', urgent.length > 1);
+  n.classList.add('show');
+}
+// bring a food card into view (switching tab / department if needed) and ring it
+function goToCard(t) {
+  if (!t) return;
+  ['overlay', 'colorOverlay', 'sheet'].forEach(hideOverlay);
+  if (curTab !== 'kitchen') showTab('kitchen');
+  if (t.dept !== curDept) switchDept(t.dept, true);
+  const card = document.querySelector(`.card[data-id="${t.id}"]`);
+  if (!card) return;
+  card.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+  card.classList.remove('spotlight'); void card.offsetWidth; card.classList.add('spotlight');
+  setTimeout(() => card.classList.remove('spotlight'), 1500);
+}
+// While food is expired, ANY tap takes you to it; only the expired card itself (Stop / trash) works as normal
+function onAnyTap(e) {
+  unlockAudio();
+  if (settings.wake && !wakeLock) applyWakeLock();
+  const urgent = urgentTimers();
+  const onNotice = e.target.closest && e.target.closest('#notice');
+  if (!urgent.length) {
+    if (onNotice && autoNotice) { const t = timers.find(x => x.id === autoNotice.id); autoNotice = null; renderNotice(); goToCard(t); }
+    return;
+  }
+  const card = !onNotice && e.target.closest && e.target.closest('.card');
+  if (curTab === 'kitchen' && card && urgent.some(t => t.id === card.dataset.id)) return;
+  e.preventDefault(); e.stopPropagation();
+  goToCard(urgent[0]);
 }
 
 /* ---------- departments ---------- */
@@ -1046,7 +1136,7 @@ function renderSettings() {
 function toggleSetting(key) {
   settings[key] = !settings[key]; saveSettings(); renderSettings();
   if (key === 'wake') applyWakeLock();
-  if (key === 'sound') updateSoundHint();
+  if (key === 'sound') renderNotice();
 }
 let sheetVal = 0;
 function stepperSheet(title, note, value, unit, min, max, onSave) {
@@ -1120,12 +1210,24 @@ setInterval(() => {
         const el = timeEls.get(t.id); if (el) el.textContent = fmt(rem);
         const bar = barEls.get(t.id); if (bar) { bar.style.width = (rem / t.total * 100) + '%'; bar.style.background = barColor(rem); }
       }
-      if (rem === 0) { t.state = 'ringing'; logRun(t, 'expired', t.endAt); save(); needRender = true; }
+      if (rem === 0) {
+        t.state = 'ringing'; logRun(t, 'expired', t.endAt);
+        // Auto-reset: beep 3 times (0 / 0.7 / 1.4 s), then count down again. Only for an expiry that just
+        // happened — food that ran out while the app was closed or asleep still waits for someone to tap Stop.
+        if (settings.autoReset && now - t.endAt < 60000) {
+          t.autoRestartAt = now + 1800;
+          autoNotice = { id: t.id, label: where(t), at: t.endAt, until: now + 6000 };
+        }
+        save(); needRender = true;
+      }
+    } else if (t.state === 'ringing' && t.autoRestartAt) {
+      if (!settings.autoReset) { delete t.autoRestartAt; save(); needRender = true; }   // switched off meanwhile: normal alarm
+      else if (now >= t.autoRestartAt) { newRun(t); save(); needRender = true; }
     }
   });
   if (needRender) render();
   timers.some(t => t.state === 'ringing') ? startAlarm() : stopAlarm();
-  updateSoundHint();
+  renderNotice();
 }, 250);
 
 /* ---------- alarm ---------- */
@@ -1142,7 +1244,6 @@ function unlockAudio() {
     try { const b = audioCtx.createBuffer(1, 1, 22050), s = audioCtx.createBufferSource(); s.buffer = b; s.connect(audioCtx.destination); s.start(0); } catch (e) {}
     tryResume();
   }
-  updateSoundHint();
 }
 function beep(force) {
   if (!settings.sound && !force) return;
@@ -1171,8 +1272,6 @@ function menuTestSound() {
     setTimeout(() => { if (!alarmTimer) setAudioSession('auto'); }, 1500);
   });
 }
-// "Tap to turn on alarm sound" pill: browsers keep sound off until someone touches the screen
-function updateSoundHint() { const h = $('soundHint'); if (h) h.classList.toggle('show', !!settings.sound && !audioReady()); }
 
 /* ---------- fullscreen + bulk actions ---------- */
 function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
@@ -1233,8 +1332,8 @@ function layoutGrid() {
 }
 
 /* ---------- listeners ---------- */
-document.body.addEventListener('touchstart', unlockAudio, { passive: true });
-document.body.addEventListener('click', () => { unlockAudio(); if (settings.wake && !wakeLock) applyWakeLock(); });
+document.addEventListener('touchend', unlockAudio, { passive: true });   // touchend counts as a real tap for iOS sound
+document.addEventListener('click', onAnyTap, true);                        // capture phase: runs before any button
 $('restName').addEventListener('input', saveName);
 $('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 $('foodTemp').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
