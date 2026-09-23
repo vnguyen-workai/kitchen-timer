@@ -246,6 +246,15 @@
   .hright .pill { padding: 5px 11px; font-size: 13px; }
   .htime { font-size: 13px; color: var(--muted); }
 
+  /* ---------- "tap to turn on alarm sound" pill (sits just above the tab bar) ---------- */
+  .sound-hint {
+    position: fixed; left: 0; right: 0; bottom: calc(96px + var(--safe-b)); z-index: 14; margin: 0 auto;
+    width: max-content; max-width: calc(100% - 24px); display: none; align-items: center; gap: 8px;
+    padding: 11px 18px; border-radius: 999px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+    color: #92400e; background: rgba(254,243,199,.9) !important; border: 1px solid rgba(251,191,36,.7) !important;
+  }
+  .sound-hint.show { display: inline-flex; animation: viewIn .4s var(--spring) both; }
+
   /* ---------- tab bar ---------- */
   .tabbar {
     position: fixed; left: 50%; bottom: calc(12px + var(--safe-b)); transform: translateX(-50%); z-index: 15;
@@ -433,6 +442,8 @@
     <div class="gnote" style="margin-bottom:10px">Everything is saved on this device only.</div>
   </div>
 </main>
+
+<button class="sound-hint glass" id="soundHint" onclick="unlockAudio()">🔇 Tap to turn on alarm sound</button>
 
 <!-- ================= TAB BAR ================= -->
 <nav class="tabbar glass" id="tabbar">
@@ -1035,6 +1046,7 @@ function renderSettings() {
 function toggleSetting(key) {
   settings[key] = !settings[key]; saveSettings(); renderSettings();
   if (key === 'wake') applyWakeLock();
+  if (key === 'sound') updateSoundHint();
 }
 let sheetVal = 0;
 function stepperSheet(title, note, value, unit, min, max, onSave) {
@@ -1113,43 +1125,54 @@ setInterval(() => {
   });
   if (needRender) render();
   timers.some(t => t.state === 'ringing') ? startAlarm() : stopAlarm();
+  updateSoundHint();
 }, 250);
 
 /* ---------- alarm ---------- */
 let audioCtx = null, alarmTimer = null;
+function audioReady() { return !!audioCtx && audioCtx.state === 'running'; }
+function tryResume() { try { const p = audioCtx.resume(); if (p && p.catch) p.catch(() => {}); return p; } catch (e) { return null; } }
+// While the alarm sounds, use the "playback" audio session so the iPhone silent switch / iPad silent
+// mode can't mute it (Safari 16.4+); switch back afterwards so music on the same device isn't cut off
+function setAudioSession(type) { try { if (navigator.audioSession && navigator.audioSession.type !== type) navigator.audioSession.type = type; } catch (e) {} }
 function unlockAudio() {
-  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
+  if (audioCtx.state !== 'running') {
+    // iOS only truly unlocks sound when something plays inside the tap itself: play a silent blip
+    try { const b = audioCtx.createBuffer(1, 1, 22050), s = audioCtx.createBufferSource(); s.buffer = b; s.connect(audioCtx.destination); s.start(0); } catch (e) {}
+    tryResume();
+  }
+  updateSoundHint();
 }
 function beep(force) {
   if (!settings.sound && !force) return;
-  if (!audioCtx) { unlockAudio(); }
-  if (!audioCtx) return;
-  const resume = audioCtx.state === 'suspended' ? audioCtx.resume() : Promise.resolve();
-  resume.then(function () {
-    try {
-      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-      o.type = 'square'; o.frequency.value = 880; g.gain.value = 0.4;
-      o.connect(g); g.connect(audioCtx.destination);
-      const n = audioCtx.currentTime;
-      g.gain.setValueAtTime(0.4, n); g.gain.setValueAtTime(0.0001, n + 0.3);
-      o.start(n); o.stop(n + 0.35);
-    } catch (e) {}
+  // sound still blocked (nobody has tapped since the app opened): skip this beep rather than queue it,
+  // or every missed beep would go off at once on the first tap
+  if (!audioReady()) { if (audioCtx) tryResume(); return; }
+  try {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'square'; o.frequency.value = 880; g.gain.value = 0.4;
+    o.connect(g); g.connect(audioCtx.destination);
+    const n = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.4, n); g.gain.setValueAtTime(0.0001, n + 0.3);
+    o.start(n); o.stop(n + 0.35);
+  } catch (e) {}
+}
+function startAlarm() {
+  if (!audioCtx) unlockAudio();
+  if (alarmTimer) return;
+  setAudioSession('playback'); beep(); alarmTimer = setInterval(beep, 700);
+}
+function stopAlarm() { if (alarmTimer) { clearInterval(alarmTimer); alarmTimer = null; setAudioSession('auto'); } }
+function menuTestSound() {
+  unlockAudio(); setAudioSession('playback');
+  Promise.resolve(tryResume()).then(() => {
+    beep(true); setTimeout(() => beep(true), 700);
+    setTimeout(() => { if (!alarmTimer) setAudioSession('auto'); }, 1500);
   });
 }
-function startAlarm() { unlockAudio(); if (alarmTimer) return; beep(); alarmTimer = setInterval(beep, 700); }
-function stopAlarm() { if (alarmTimer) { clearInterval(alarmTimer); alarmTimer = null; } }
-function menuTestSound() {
-  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
-  if (!audioCtx) return;
-  // Play a silent buffer synchronously to unlock iOS AudioContext within the gesture
-  try {
-    const buf = audioCtx.createBuffer(1, 1, 22050);
-    const src = audioCtx.createBufferSource();
-    src.buffer = buf; src.connect(audioCtx.destination); src.start(0);
-  } catch(e) {}
-  audioCtx.resume().then(() => { beep(true); setTimeout(() => beep(true), 700); });
-}
+// "Tap to turn on alarm sound" pill: browsers keep sound off until someone touches the screen
+function updateSoundHint() { const h = $('soundHint'); if (h) h.classList.toggle('show', !!settings.sound && !audioReady()); }
 
 /* ---------- fullscreen + bulk actions ---------- */
 function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
