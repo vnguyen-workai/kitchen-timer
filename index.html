@@ -29,10 +29,12 @@
     -webkit-user-select: none; user-select: none;
     -webkit-font-smoothing: antialiased;
   }
-  body { padding-bottom: calc(110px + var(--safe-b)); }
+  html { touch-action: manipulation; }   /* no double-tap zoom on busy fingers */
+  body { padding-bottom: calc(110px + var(--safe-b)); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  input { -webkit-user-select: text; user-select: text; }
   /* soft color field behind the glass */
   body::before {
-    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    content: ""; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: -1; pointer-events: none;
     background:
       radial-gradient(640px 420px at 8% -8%, rgba(96,165,250,.45), transparent 70%),
       radial-gradient(560px 420px at 96% 6%, rgba(167,139,250,.34), transparent 70%),
@@ -89,6 +91,9 @@
     padding: 4px 8px; margin: 4px 0 0 -8px;
   }
   .dept-btn:active { background: rgba(37,99,235,.08); }
+  .dept-btn { max-width: 100%; }
+  #deptLabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dept-btn .chev, .dept-btn .dot-alert { flex-shrink: 0; }
   .dept-btn .chev { font-size: 15px; stroke-width: 3; }
   .dot-alert { width: 9px; height: 9px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 2px #fff; display: none; }
   .dot-alert.show { display: inline-block; animation: pulseRed 1.4s ease-in-out infinite; }
@@ -153,7 +158,7 @@
   .cleft { min-width: 0; }
   .cname { display: flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 800; letter-spacing: -.3px; line-height: 1.15; word-break: break-word; }
   .cdot { position: relative; width: 16px; height: 16px; border-radius: 50%; border: none; padding: 0; flex-shrink: 0; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
-  .cdot::after { content: ""; position: absolute; inset: -12px; }
+  .cdot::after { content: ""; position: absolute; top: -12px; right: -12px; bottom: -12px; left: -12px; }
   .csub { font-size: 15px; color: var(--muted); margin-top: 4px; }
   .csub.hot { color: #dc2626; font-weight: 700; }
   .pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; font-size: 14px; font-weight: 700; white-space: nowrap; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.7); }
@@ -259,9 +264,9 @@
   .tab .tbadge.show { display: inline-flex; }
 
   /* ---------- sheets / pop-ups ---------- */
-  .overlay { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,.28); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,.28); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
   .overlay.show { display: flex; animation: fadeIn .25s both; }
-  .overlay.closing { animation: fadeOut .22s both; }
+  .overlay.closing { animation: fadeOut .22s both; pointer-events: none; }   /* no double-submits while closing */
   @keyframes fadeIn { from { opacity: 0; } }
   @keyframes fadeOut { to { opacity: 0; } }
   .modal { width: 100%; max-width: 440px; max-height: 92vh; overflow-y: auto; border-radius: 30px; padding: 26px 24px 24px; background: rgba(255,255,255,.82); animation: popIn .45s var(--spring) both; }
@@ -440,9 +445,9 @@
     <h2>Add Food</h2>
     <p class="fixed-note" id="addNote">Timer is set to <b>4 hours</b></p>
     <label>Food name</label>
-    <input type="text" id="foodName" placeholder="e.g. Beef, Crab, Chicken" autocomplete="off">
+    <input type="text" id="foodName" placeholder="e.g. Beef, Crab, Chicken" autocomplete="off" maxlength="60">
     <label>Start temp °F <small style="color:#9aa1ab">(optional)</small></label>
-    <input type="number" id="foodTemp" inputmode="numeric" placeholder="e.g. 30">
+    <input type="number" id="foodTemp" inputmode="decimal" step="any" placeholder="e.g. 38.5">
     <label>Card color</label>
     <div class="swatches" id="addSwatchRow"></div>
     <div class="actions">
@@ -568,6 +573,7 @@ function loadSettings() {
 }
 function loadDepts() {
   depts = getJSON(DEPTS_STORE, null);
+  if (Array.isArray(depts)) depts = depts.filter(d => d && d.id && d.name);
   if (!Array.isArray(depts) || !depts.length) depts = DEFAULT_DEPTS.map(d => Object.assign({}, d));
   let cur = null; try { cur = localStorage.getItem(CUR_DEPT_STORE); } catch (e) {}
   if (!cur) {
@@ -583,10 +589,15 @@ function loadDepts() {
   saveDepts();
 }
 function load() {
-  const data = getJSON(STORE, []);
+  let data = getJSON(STORE, []);
   const now = Date.now();
   history = getJSON(HIST_STORE, []);
-  (Array.isArray(data) ? data : []).forEach(t => {
+  if (!Array.isArray(history)) history = [];
+  history = history.filter(h => h && Number.isFinite(h.endedAt));
+  data = (Array.isArray(data) ? data : []).filter(t => t && t.id);
+  data.forEach(t => {
+    if (['running', 'ringing', 'done'].indexOf(t.state) < 0) t.state = 'done';   // e.g. "paused" from an old version
+    if (!Number.isFinite(t.total) || t.total <= 0) t.total = holdSecs();
     if (!t.color) t.color = 'slate';
     if (!t.created) t.created = t.startAt || now;
     if (!t.name) t.name = 'Food';
@@ -600,9 +611,11 @@ function load() {
       t.remaining = Math.max(0, Math.round((t.endAt - now) / 1000));
       if (t.remaining === 0) t.state = 'ringing';
     }
+    if (!Number.isFinite(t.startAt)) t.startAt = now;
+    if (!Number.isFinite(t.endAt)) t.endAt = t.startAt + t.total * 1000;
     if (t.state !== 'running' && !t.logged) logRun(t, 'expired', t.endAt, true);
   });
-  timers = Array.isArray(data) ? data : [];
+  timers = data;
   save(); saveHistory();
 }
 function loadName() { try { $('restName').value = localStorage.getItem(NAME_STORE) || ''; } catch (e) {} }
@@ -621,14 +634,20 @@ function logRun(t, outcome, at, quiet) {
 }
 
 /* ---------- sheets / pop-ups ---------- */
-function showOverlay(id) { const o = $(id); o.classList.remove('closing'); o.classList.add('show'); }
+const overlayTimers = {};
+function showOverlay(id) {
+  const o = $(id);
+  clearTimeout(overlayTimers[id]);   // a sheet reopened mid-close must not be hidden by the old timer
+  o.classList.remove('closing'); o.classList.add('show');
+}
 function hideOverlay(id) {
-  const o = $(id); if (!o.classList.contains('show')) return;
+  const o = $(id); if (!o.classList.contains('show') || o.classList.contains('closing')) return;
   o.querySelectorAll('input').forEach(i => i.blur());
   if (reducedMotion) { o.classList.remove('show'); return; }
   o.classList.add('closing');
-  setTimeout(() => o.classList.remove('show', 'closing'), 230);
+  overlayTimers[id] = setTimeout(() => o.classList.remove('show', 'closing'), 230);
 }
+function overlayOpen(id) { const o = $(id); return o.classList.contains('show') && !o.classList.contains('closing'); }
 function openSheet(html) { $('sheetBody').innerHTML = html; hydrateIcons($('sheetBody')); showOverlay('sheet'); }
 function closeSheet() { hideOverlay('sheet'); }
 
@@ -657,16 +676,17 @@ function openAdd() {
 }
 function closeAdd() { hideOverlay('overlay'); }
 function startTimer() {
+  if (!overlayOpen('overlay')) return;   // double-tap / double-Enter must not add the food twice
   const name = $('foodName').value.trim() || 'Food';
   const total = holdSecs();
   const tempRaw = $('foodTemp').value.trim();
-  const temp = tempRaw === '' ? null : Number(tempRaw);
+  const temp = tempRaw === '' ? NaN : Number(tempRaw);
   const now = Date.now();
   const id = uid();
   timers.push({
     id, name, dept: curDept, total, remaining: total, state: 'running',
     startAt: now, endAt: now + total * 1000, created: now,
-    temp: (temp != null && !isNaN(temp)) ? temp : null, color: addColor, logged: false
+    temp: Number.isFinite(temp) ? Math.round(temp * 10) / 10 : null, color: addColor, logged: false
   });
   enterId = id;
   save(); closeAdd(); render();
@@ -689,17 +709,20 @@ function openColor(id, e) {
 function newRun(t) {
   const now = Date.now();
   t.total = holdSecs(); t.remaining = t.total; t.startAt = now; t.endAt = now + t.total * 1000;
-  t.state = 'running'; t.logged = false;
+  t.state = 'running'; t.logged = false; t.actedAt = now;
 }
 function restart(id) {
   const t = timers.find(x => x.id === id); if (!t) return;
+  // "Stop alarm", "Start again" and "Reset" share one spot on the card: ignore the second tap of a
+  // double-tap so an expired item can't be restarted (or a new run reset) by accident
+  if (Date.now() - (t.actedAt || 0) < 700) return;
   if (t.state === 'running') logRun(t, 'reset');
   newRun(t); save(); render();
 }
 function stopRing(id) {
-  const t = timers.find(x => x.id === id); if (!t) return;
+  const t = timers.find(x => x.id === id); if (!t || t.state !== 'ringing') return;
   if (settings.autoReset) newRun(t);
-  else { t.state = 'done'; t.remaining = 0; }
+  else { t.state = 'done'; t.remaining = 0; t.actedAt = Date.now(); }
   if (!timers.some(x => x.state === 'ringing')) stopAlarm();   // silence immediately, don't wait for the tick
   save(); render();
 }
@@ -942,7 +965,8 @@ function renderHistory() {
   $('histChips').innerHTML = [`<button class="chip${histFilter === 'all' ? ' on' : ''}" onclick="setHistFilter('all')">All</button>`]
     .concat(chipDepts.map(d => `<button class="chip${histFilter === d.id ? ' on' : ''}" onclick="setHistFilter('${d.id}')">${esc(d.name)}</button>`)).join('');
   $('histChips').style.display = chipDepts.length > 1 ? 'flex' : 'none';
-  const list = history.filter(h => histFilter === 'all' || h.dept === histFilter);
+  // newest first by when the run ended (runs that expired while the app was closed are logged late)
+  const list = history.filter(h => histFilter === 'all' || h.dept === histFilter).sort((a, b) => b.endedAt - a.endedAt);
   if (!list.length) {
     $('histList').innerHTML = `<div class="empty glass" style="margin:18px 0">No history yet.<br><span style="font-size:15px">Items are logged here when they expire, are reset, or are removed.</span></div>`;
     return;
@@ -957,19 +981,21 @@ function renderHistory() {
     html += `<div class="row static">` +
       `<span class="hrow-dot" style="background:${dotOf(h.color)}"></span>` +
       `<span class="rtxt"><span class="hname">${esc(h.name)}</span>` +
-      `<div class="rsub">${esc(h.deptName || deptName(h.dept))} · ${clock(h.startAt)} → ${clock(h.endAt)}<span${hot ? ' style="color:#dc2626;font-weight:700"' : ''}>${temp}</span></div></span>` +
+      `<div class="rsub">${esc(histDeptName(h))} · ${clock(h.startAt)} → ${clock(h.endAt)}<span${hot ? ' style="color:#dc2626;font-weight:700"' : ''}>${temp}</span></div></span>` +
       `<span class="hright"><span class="pill ${o.cls}">${o.label}</span><span class="htime">${clock(h.endedAt)}</span></span>` +
     `</div>`;
   });
   $('histList').innerHTML = html + '</div>';
 }
 function setHistFilter(f) { histFilter = f; renderHistory(); }
+// a renamed department shows its current name; a deleted one keeps the name it had
+function histDeptName(h) { const d = deptById(h.dept); return d ? d.name : (h.deptName || 'Kitchen'); }
 function exportHistory() {
   if (!history.length) { alert('No history to export yet.'); return; }
   const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
   const d = ms => { const x = new Date(ms); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
   const rows = [['Date', 'Department', 'Food', 'Start time', 'Start temp (F)', 'Discard time', 'Ended at', 'Outcome']];
-  history.slice().reverse().forEach(h => rows.push([d(h.startAt), h.deptName || deptName(h.dept), h.name, clock(h.startAt), h.temp == null ? '' : h.temp, clock(h.endAt), clock(h.endedAt), (OUTCOME[h.outcome] || OUTCOME.removed).label]));
+  history.slice().sort((a, b) => a.endedAt - b.endedAt).forEach(h => rows.push([d(h.startAt), histDeptName(h), h.name, clock(h.startAt), h.temp == null ? '' : h.temp, clock(h.endAt), clock(h.endedAt), (OUTCOME[h.outcome] || OUTCOME.removed).label]));
   const blob = new Blob([rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1042,14 +1068,22 @@ function openInstall() {
 }
 
 /* ---------- keep screen awake ---------- */
-let wakeLock = null;
+let wakeLock = null, wakeBusy = false;
 async function applyWakeLock() {
-  if (!('wakeLock' in navigator)) return;
+  if (!('wakeLock' in navigator) || wakeBusy) return;   // one request at a time, so no lock is left dangling
+  wakeBusy = true;
   try {
     if (settings.wake && document.visibilityState === 'visible') {
-      if (!wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
-    } else if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+      if (!wakeLock) {
+        const lock = await navigator.wakeLock.request('screen');
+        lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; });
+        wakeLock = lock;
+      }
+    } else if (wakeLock) { const lock = wakeLock; wakeLock = null; await lock.release(); }
   } catch (e) { wakeLock = null; }
+  wakeBusy = false;
+  // the setting may have been switched off while the request was pending
+  if (wakeLock && !(settings.wake && document.visibilityState === 'visible')) applyWakeLock();
 }
 
 /* ---------- tick ---------- */
@@ -1149,9 +1183,11 @@ function layoutGrid() {
   grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
   const colW = ((grid.clientWidth || w) - padX - (cols - 1) * gap) / cols;
   const content = colW - 43;                     // card padding + border
-  // "H:MM:SS" is ~3.75em wide; keep room for "remaining" beside it, else let that label wrap below
-  let fs = (content - 110) / 3.75;
-  if (fs < 46) fs = content / 3.9;
+  // "H:MM:SS" is ~3.75em wide ("HH:MM:SS" ~4.35em for 10h+ timers); keep room for "remaining"
+  // beside it, else let that label wrap below
+  const em = (settings.hours >= 10 || timers.some(t => t.total >= 36000)) ? 4.35 : 3.75;
+  let fs = (content - 110) / em;
+  if (fs < 46) fs = content / (em + 0.15);
   fs = Math.max(30, Math.min(88, fs));
   document.documentElement.style.setProperty('--timer-fs', fs + 'px');
   document.documentElement.style.setProperty('--fval-fs', (content < 300 ? 15 : content < 360 ? 17 : 19) + 'px');
@@ -1165,7 +1201,7 @@ function layoutGrid() {
 }
 
 /* ---------- listeners ---------- */
-document.body.addEventListener('touchstart', unlockAudio);
+document.body.addEventListener('touchstart', unlockAudio, { passive: true });
 document.body.addEventListener('click', () => { unlockAudio(); if (settings.wake && !wakeLock) applyWakeLock(); });
 $('restName').addEventListener('input', saveName);
 $('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
