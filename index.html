@@ -27,10 +27,11 @@
   body::before {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background:
-      radial-gradient(640px 420px at 8% -8%, rgba(96,165,250,.38), transparent 70%),
-      radial-gradient(560px 420px at 96% 6%, rgba(167,139,250,.28), transparent 70%),
-      radial-gradient(640px 520px at 82% 104%, rgba(45,212,191,.22), transparent 70%),
-      radial-gradient(520px 420px at -4% 92%, rgba(251,191,36,.16), transparent 70%);
+      radial-gradient(640px 420px at 8% -8%, rgba(96,165,250,.45), transparent 70%),
+      radial-gradient(560px 420px at 96% 6%, rgba(167,139,250,.34), transparent 70%),
+      radial-gradient(700px 520px at 50% 55%, rgba(125,211,252,.18), transparent 70%),
+      radial-gradient(640px 520px at 82% 104%, rgba(45,212,191,.28), transparent 70%),
+      radial-gradient(520px 420px at -4% 92%, rgba(251,191,36,.2), transparent 70%);
   }
   .ic { width: 1em; height: 1em; vertical-align: -0.13em; }
 
@@ -70,8 +71,11 @@
   }
   .dept-name::placeholder { color: rgba(37,99,235,.38); }
   .rest-name:focus, .dept-name:focus { outline: none; background: rgba(255,255,255,.6); }
-  .hrow { display: flex; align-items: center; justify-content: space-between; gap: 14px 20px; margin-top: 18px; flex-wrap: wrap; }
-  .rules { display: flex; align-items: center; gap: 6px 22px; flex-wrap: wrap; color: #6b7280; font-size: 15px; }
+  /* name/title/dept/rules on the left, Add Food bottom-right — no dead space */
+  header { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; }
+  .hmain { min-width: 0; }
+  .add-btn { grid-column: 2; grid-row: 1; align-self: end; }
+  .rules { display: flex; align-items: center; gap: 6px 22px; flex-wrap: wrap; color: #6b7280; font-size: 15px; margin-top: 12px; }
   .rule { display: inline-flex; align-items: center; gap: 7px; }
   .rule .ic { font-size: 17px; color: #9ca3af; }
   .add-btn {
@@ -100,13 +104,25 @@
   }
   .sortwrap select:focus { outline: none; }
 
-  /* ---------- cards (solid, for readability) ---------- */
+  /* ---------- cards (liquid glass, tinted by card color) ---------- */
   #timers { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 12px 24px 32px; }
   .card {
-    position: relative; min-width: 0;
-    background: #fff; border-radius: 24px; padding: 20px;
-    border: 1.5px solid rgba(15,23,42,.06);
-    box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px rgba(30,41,80,.08);
+    --ring: rgba(255,255,255,0); --tint: rgba(255,255,255,0);
+    position: relative; min-width: 0; border-radius: 26px; padding: 20px;
+    background-color: rgba(255,255,255,.58);
+    background-image: linear-gradient(155deg, var(--tint) 0%, rgba(255,255,255,0) 55%), linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 40%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid rgba(255,255,255,.8);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.95),
+      inset 0 -1px 0 rgba(255,255,255,.3),
+      inset 0 0 0 1.5px var(--ring),
+      0 12px 32px rgba(30,41,80,.10),
+      0 1px 2px rgba(30,41,80,.06);
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .card { background-color: rgba(255,255,255,.92); }
   }
   .card.enter { animation: cardIn .5s var(--spring) both; }
   @keyframes cardIn { from { opacity: 0; transform: translateY(14px) scale(.96); } }
@@ -118,11 +134,12 @@
   .csub { font-size: 15px; color: var(--muted); margin-top: 4px; }
   .pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; font-size: 14px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
   .pill .d { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
-  .pill.active { background: #dcfce7; color: #15803d; }
-  .pill.due    { background: #fef3c7; color: #b45309; }
+  .pill { box-shadow: inset 0 1px 0 rgba(255,255,255,.7); }
+  .pill.active { background: rgba(220,252,231,.85); color: #15803d; }
+  .pill.due    { background: rgba(254,243,199,.9); color: #b45309; }
   .pill.due .d { animation: pulse 1.6s ease-in-out infinite; }
-  .pill.exp    { background: #fee2e2; color: #dc2626; }
-  .pill.done   { background: #f1f5f9; color: #64748b; }
+  .pill.exp    { background: rgba(254,226,226,.9); color: #dc2626; }
+  .pill.done   { background: rgba(241,245,249,.85); color: #64748b; }
   @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.6); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); } }
   .trow { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin: 14px 0 14px; }
   .ctime { font-size: var(--timer-fs, 64px); font-weight: 800; letter-spacing: -1.5px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
@@ -130,10 +147,10 @@
   .rem.exp { color: #dc2626; font-weight: 700; }
   .card.ringing .ctime { color: #dc2626; }
   .card.done .ctime { color: #94a3b8; }
-  .pbar { height: 8px; background: #eef1f5; border-radius: 99px; overflow: hidden; }
+  .pbar { height: 8px; background: rgba(15,23,42,.08); border-radius: 99px; overflow: hidden; }
   .pfill { height: 100%; border-radius: 99px; transition: width .6s linear, background-color .4s; }
   .finfo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
-  .fcol { padding: 0 12px; border-left: 1px solid #e8ecf1; min-width: 0; }
+  .fcol { padding: 0 12px; border-left: 1px solid rgba(15,23,42,.09); min-width: 0; }
   .fcol:first-child { padding-left: 0; border-left: none; }
   .flabel { font-size: 11px; font-weight: 700; letter-spacing: .5px; color: var(--muted); text-transform: uppercase; white-space: nowrap; }
   .fval { font-size: var(--fval-fs, 19px); font-weight: 800; color: var(--ink); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -145,15 +162,15 @@
   .cbtns { display: flex; gap: 10px; margin-top: 18px; }
   .act { flex: 1; height: 52px; border-radius: 16px; font: inherit; font-size: 17px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: none; white-space: nowrap; }
   .act .ic { font-size: 19px; }
-  .act.reset { background: #f5f7fa; color: #1f2733; border: 1px solid #e3e7ed; }
-  .act.stop  { background: #dc2626; color: #fff; box-shadow: 0 6px 16px rgba(220,38,38,.28); }
-  .act.again { background: #2563eb; color: #fff; }
-  .act.trash { flex: 0 0 64px; background: #fee2e2; color: #dc2626; }
+  .act.reset { background: rgba(255,255,255,.6); color: #1f2733; border: 1px solid rgba(255,255,255,.9); box-shadow: inset 0 1px 0 #fff, 0 1px 3px rgba(30,41,80,.08); }
+  .act.stop  { background: linear-gradient(180deg, #ef4444, #dc2626); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 6px 16px rgba(220,38,38,.28); }
+  .act.again { background: linear-gradient(180deg, #4f8cff, #2563eb); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+  .act.trash { flex: 0 0 64px; background: rgba(254,226,226,.75); color: #dc2626; box-shadow: inset 0 1px 0 rgba(255,255,255,.7); }
   .act.trash .ic { font-size: 21px; }
-  .card.ringing { border-color: #fca5a5 !important; animation: flash 1s ease-in-out infinite; }
+  .card.ringing { --ring: rgba(239,68,68,.6); --tint: rgba(239,68,68,.14); animation: flash 1s ease-in-out infinite; }
   @keyframes flash {
-    0%,100% { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px rgba(30,41,80,.08), 0 0 0 0 rgba(220,38,38,0); }
-    50%     { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px rgba(220,38,38,.18), 0 0 0 6px rgba(220,38,38,.22); }
+    0%,100% { box-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 0 0 0 1.5px var(--ring), 0 12px 32px rgba(30,41,80,.10), 0 0 0 0 rgba(220,38,38,0); }
+    50%     { box-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 0 0 0 1.5px var(--ring), 0 12px 32px rgba(220,38,38,.20), 0 0 0 6px rgba(220,38,38,.22); }
   }
   .card.done { opacity: .78; }
 
@@ -218,9 +235,9 @@
     .rest-name { font-size: 38px; letter-spacing: -1px; padding-right: 56px; }
     .log-title { font-size: 21px; }
     .dept-name { font-size: 14px; letter-spacing: 1.5px; }
-    .hrow { flex-direction: column; align-items: stretch; margin-top: 14px; }
+    header { grid-template-columns: minmax(0, 1fr); }
     .rules { flex-direction: column; align-items: flex-start; gap: 6px; }
-    .add-btn { width: 100%; padding: 15px; }
+    .add-btn { grid-column: 1; grid-row: auto; width: 100%; padding: 15px; margin-top: 14px; }
     .toolbar { padding: 18px 18px 2px; }
     #timers { padding: 10px 12px 28px; gap: 14px; }
     .empty { margin: 14px 12px; }
@@ -243,16 +260,16 @@
 
 <header class="glass">
   <button class="menu-btn glass press" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
-  <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
-  <div class="log-title">Time / Temp Control Log</div>
-  <input class="dept-name" id="deptName" type="text" placeholder="Department name" autocomplete="off">
-  <div class="hrow">
+  <div class="hmain">
+    <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
+    <div class="log-title">Time / Temp Control Log</div>
+    <input class="dept-name" id="deptName" type="text" placeholder="Department name" autocomplete="off">
     <div class="rules">
       <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>Temp must not exceed 70&deg;F</span>
       <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Discard after 4 hours</span>
     </div>
-    <button class="add-btn press" onclick="openAdd()"><span class="plus">+</span> Add Food</button>
   </div>
+  <button class="add-btn press" onclick="openAdd()"><span class="plus">+</span> Add Food</button>
 </header>
 
 <div class="toolbar">
@@ -319,15 +336,15 @@
 <script>
 /* ---------- colors ---------- */
 const COLORS = {
-  slate:  { bd: 'rgba(15,23,42,.06)', ac: '#0f172a' },
-  red:    { bd: '#fca5a5', ac: '#dc2626' },
-  orange: { bd: '#fdba74', ac: '#ea580c' },
-  yellow: { bd: '#f2dd5e', ac: '#b8890a' },
-  green:  { bd: '#86efac', ac: '#16a34a' },
-  teal:   { bd: '#5eead4', ac: '#0d9488' },
-  blue:   { bd: '#93c5fd', ac: '#2563eb' },
-  purple: { bd: '#d8b4fe', ac: '#9333ea' },
-  pink:   { bd: '#f9a8d4', ac: '#db2777' }
+  slate:  { bd: 'rgba(255,255,255,0)', tint: 'rgba(255,255,255,0)',   ac: '#0f172a' },
+  red:    { bd: 'rgba(248,113,113,.55)', tint: 'rgba(239,68,68,.13)',  ac: '#dc2626' },
+  orange: { bd: 'rgba(251,146,60,.55)',  tint: 'rgba(249,115,22,.13)', ac: '#ea580c' },
+  yellow: { bd: 'rgba(234,179,8,.5)',    tint: 'rgba(234,179,8,.14)',  ac: '#b8890a' },
+  green:  { bd: 'rgba(74,222,128,.55)',  tint: 'rgba(34,197,94,.13)',  ac: '#16a34a' },
+  teal:   { bd: 'rgba(45,212,191,.55)',  tint: 'rgba(20,184,166,.13)', ac: '#0d9488' },
+  blue:   { bd: 'rgba(96,165,250,.55)',  tint: 'rgba(59,130,246,.13)', ac: '#2563eb' },
+  purple: { bd: 'rgba(192,132,252,.55)', tint: 'rgba(168,85,247,.13)', ac: '#9333ea' },
+  pink:   { bd: 'rgba(244,114,182,.55)', tint: 'rgba(236,72,153,.13)', ac: '#db2777' }
 };
 const COLOR_ORDER = ['slate','red','orange','yellow','green','teal','blue','purple','pink'];
 function colorOf(t) { return COLORS[t && t.color] || COLORS.slate; }
@@ -519,7 +536,10 @@ function render() {
     const card = document.createElement('div');
     card.dataset.id = t.id;
     card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '') + (t.id === enterId && !reducedMotion ? ' enter' : '');
-    card.style.borderColor = col.bd;
+    if (t.state !== 'ringing') {   // expired cards keep their red ring/tint from CSS
+      card.style.setProperty('--ring', col.bd);
+      card.style.setProperty('--tint', col.tint);
+    }
 
     let pill, btns, label, rem, w, c;
     const trash = `<button class="act trash press" onclick="del('${t.id}',this)" aria-label="Delete">${ICON_TRASH}</button>`;
