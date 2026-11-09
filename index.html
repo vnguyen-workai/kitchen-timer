@@ -314,9 +314,16 @@
   .tab.on[data-tab="kitchen"] .ic path, .tab.on[data-tab="settings"] .ic path, .tab.on[data-tab="history"] .ic circle { fill: currentColor; }
   .tab.on[data-tab="history"] .ic path { stroke: #fff; }
   .tab.on[data-tab="settings"] .ic circle { fill: #fff; stroke: none; }
-  /* slimmer, like Walmart's bar: less padding, a hairline bezel */
-  .tabbar { padding: 4px; }
-  .tabbar.lglass::before, .tab-ind::before { padding: 1px; }
+  /* slimmer, like Walmart's bar: room on both sides, clear tinted glass, a hairline edge */
+  .tabbar {
+    padding: 4px; width: min(440px, calc(100% - 32px)); bottom: max(14px, calc(var(--safe-b) - 8px));
+    background: rgba(255,255,255,.06);   /* almost clear: what's behind shows through with its own color */
+    -webkit-backdrop-filter: blur(4px) saturate(220%) brightness(1.04); backdrop-filter: blur(4px) saturate(220%) brightness(1.04);
+    /* glass look from a soft bright glow inside the edge + a .5px line, not a thick border */
+    box-shadow: inset 0 0 18px rgba(255,255,255,.4), inset 0 0 0 .5px rgba(255,255,255,.85), inset 0 1px 0 rgba(255,255,255,.6), 0 6px 18px rgba(15,23,42,.09), 0 0 0 .5px rgba(15,23,42,.06);
+  }
+  .tabbar.lglass::before { display: none; }
+  .tab-ind::before { padding: .5px; }
   .tab-ind { top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3); }
   .tab { padding: 6px 4px 5px; gap: 1px; }
   .tab .ic { font-size: 25px; }
