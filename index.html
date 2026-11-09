@@ -317,8 +317,8 @@
   .tabbar {
     padding: 4px; width: min(440px, calc(100% - 32px)); bottom: calc(14px + var(--safe-b) * .4);   /* iPhone ≈ 28pt, iPad with a home bar 22pt, no home bar 14pt: always clear of the home bar line */
     /* white frosted glass like Instagram's bar: mostly white, what's behind only shows faintly */
-    background: rgba(255,255,255,.8);
-    -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(255,255,255,.6);   /* white, but you still see colors and shapes moving behind it */
+    -webkit-backdrop-filter: blur(6px) saturate(180%); backdrop-filter: blur(6px) saturate(180%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 .5px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.06);
   }
   .tabbar.lglass::before { display: none; }
