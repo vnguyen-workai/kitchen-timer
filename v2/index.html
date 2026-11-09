@@ -447,6 +447,18 @@
   .largetitle .rules { margin-top: 14px; padding: 14px 18px; gap: 8px 26px; border-radius: 18px; background: #fff;
     box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.05); color: var(--ink); font-size: 16px; font-weight: 500; }
   .largetitle .rule .ic { color: var(--blue); font-size: 18px; }
+  /* iPad / PC: three equal sections with hairline dividers, so the block is filled evenly (no empty space on the right) */
+  @media (min-width: 900px) {
+    .largetitle .rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: 14px 0; }
+    .largetitle .rule { justify-content: center; padding: 2px 14px; text-align: center; }
+    .largetitle .rule + .rule { border-left: .5px solid var(--sep); }
+  }
+  /* narrower (iPad mini upright, phones): one rule per row, like an iOS list, so nothing wraps unevenly */
+  @media (max-width: 899px) {
+    .largetitle .rules { flex-direction: column; align-items: stretch; gap: 0; padding: 0 18px; }
+    .largetitle .rule { padding: 12px 0; }
+    .largetitle .rule + .rule { border-top: .5px solid var(--sep); }
+  }
 
   /* content: solid cards, still tinted with their color */
   .card { background-color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 24px;
