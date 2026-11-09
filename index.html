@@ -311,8 +311,10 @@
   }
   .tabbar::before { padding: 2px; }   /* a thicker, glossier edge than the other glass */
   /* switching tabs: the whole bar swells a little and settles back (uses `scale`, so the centering transform is untouched) */
-  .tabbar.pulse { animation: barPulse .5s var(--spring); }
-  @keyframes barPulse { 40% { scale: 1.045; } }
+  /* ease-in-out on both halves: it speeds up gently, slows to a soft peak, and settles with no jolt */
+  .tabbar { will-change: scale; }   /* its own GPU layer, so the glass isn't redrawn on every frame */
+  .tabbar.pulse { animation: barPulse .6s cubic-bezier(.45, 0, .55, 1); }
+  @keyframes barPulse { 50% { scale: 1.04; } }
   /* the selected tab: a glass droplet that stretches as it slides */
   .tab-ind {
     position: absolute; top: 6px; bottom: 6px; left: 6px; width: calc((100% - 12px) / 3); border-radius: 30px;
@@ -320,8 +322,8 @@
     box-shadow: inset 0 1px 1px rgba(255,255,255,.6);
     transition: translate .5s var(--spring);   /* position uses `translate`, the stretch uses `scale` — they don't fight */
   }
-  .tab-ind.squish { animation: squish .5s var(--spring); }
-  @keyframes squish { 35% { scale: 1.12 .88; } }
+  .tab-ind.squish { animation: squish .6s cubic-bezier(.45, 0, .55, 1); }
+  @keyframes squish { 50% { scale: 1.1 .9; } }
   .tab { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px 7px; border: none; background: transparent; font: inherit; font-size: 12.5px; font-weight: 600; color: #475569; cursor: pointer; transition: color .25s; }
   .tab .ic { font-size: 25px; transition: transform .35s var(--bounce); }
   .tab:active .ic { transform: scale(.88); transition-duration: .08s; }
@@ -1173,6 +1175,7 @@ function deleteDept(id) {
 }
 
 /* ---------- tabs ---------- */
+$('tabbar').addEventListener('animationend', e => { if (e.animationName === 'barPulse') $('tabbar').classList.remove('pulse'); else if (e.animationName === 'squish') $('tabInd').classList.remove('squish'); });
 const TABS = ['kitchen', 'history', 'settings'];
 function showTab(name) {
   if (TABS.indexOf(name) < 0) name = 'kitchen';
@@ -1184,11 +1187,8 @@ function showTab(name) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
   const ind = $('tabInd');
   ind.style.translate = TABS.indexOf(name) * 100 + '% 0';
-  if (changed) {   // restart the stretch + the bar's swell
-    const bar = $('tabbar');
-    ind.classList.remove('squish'); bar.classList.remove('pulse'); void ind.offsetWidth;
-    ind.classList.add('squish'); bar.classList.add('pulse');
-  }
+  // stretch the bubble + swell the bar; a tap mid-swell lets the running one finish instead of snapping back to the start
+  if (changed) { ind.classList.add('squish'); $('tabbar').classList.add('pulse'); }
   if (name === 'history') renderHistory();
   if (name === 'settings') renderSettings();
   if (name === 'kitchen') { layoutGrid(); fitName(); }
