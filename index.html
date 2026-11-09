@@ -282,7 +282,7 @@
     width: min(460px, calc(100% - 16px)); display: flex; padding: 6px; border-radius: 36px;
     /* smooth frosted glass: enough blur that what's behind turns into soft color, not busy detail */
     background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.15));
-    -webkit-backdrop-filter: blur(8px) saturate(180%); backdrop-filter: blur(8px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%) brightness(1.05); backdrop-filter: blur(12px) saturate(180%) brightness(1.05);
     box-shadow: inset 0 1px 1px rgba(255,255,255,.9), inset 0 -1px 1px rgba(15,23,42,.05), 0 10px 30px rgba(15,23,42,.14), 0 1px 3px rgba(15,23,42,.08);
   }
   .tabbar::before { padding: 2px; }   /* a thicker, glossier edge than the other glass */
@@ -307,6 +307,13 @@
   .tab span.tl { max-width: calc(100% + 24px); padding: 6px 12px; margin: -6px -12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tab .tbadge { position: absolute; top: 4px; left: calc(50% + 8px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 800; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 2px #fff; }
   .tab .tbadge.show { display: inline-flex; }
+  /* iOS 26 tab bar look (like Walmart / Instagram): solid dark icons and labels, the selected icon filled in */
+  .tab { color: #1c1c1e; font-size: 13px; font-weight: 500; }
+  .tab .ic { font-size: 27px; stroke-width: 1.8; }
+  .tab.on { font-weight: 600; }
+  .tab.on[data-tab="kitchen"] .ic path, .tab.on[data-tab="settings"] .ic path, .tab.on[data-tab="history"] .ic circle { fill: currentColor; }
+  .tab.on[data-tab="history"] .ic path { stroke: #fff; }
+  .tab.on[data-tab="settings"] .ic circle { fill: #fff; stroke: none; }
 
   /* ---------- sheets / pop-ups ---------- */
   .overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,.22); }
@@ -565,7 +572,7 @@
 const ICONS = {
   home:    '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
   clock:   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-  gear:    '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  gear:    '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/><circle cx="12" cy="12" r="3"/>',
   thermo:  '<path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/>',
   chevR:   '<path d="m9 18 6-6-6-6"/>',
   check:   '<path d="M20 6 9 17l-5-5"/>',
