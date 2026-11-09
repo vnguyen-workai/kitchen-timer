@@ -50,7 +50,7 @@
   .vtag { display: inline-block; vertical-align: 3px; margin-left: 6px; padding: 2px 9px; border-radius: 99px; font-size: 13px; font-weight: 800; letter-spacing: .5px; color: #fff; background: linear-gradient(180deg, #a78bfa, #7c3aed); }
   html { touch-action: manipulation; background: #f5f7fb; }   /* no double-tap zoom on busy fingers; page color on html only — a body background would hide the color field below */
   html { overflow-y: scroll; }   /* PCs always show the scrollbar, so the tab bar doesn't jump between short and long tabs (no effect on iPad) */
-  body { padding-bottom: calc(110px + var(--safe-b)); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  body { padding-bottom: calc(96px + var(--safe-b)); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
   input { -webkit-user-select: text; user-select: text; }
   /* soft color field behind the glass */
   body::before {
@@ -286,8 +286,8 @@
 
   /* ---------- tab bar ---------- */
   .tabbar {
-    position: fixed; left: 0; right: 0; margin: 0 auto; bottom: calc(12px + var(--safe-b)); z-index: 15;   /* centered without a transform, so the swell grows evenly from the middle */
-    width: min(460px, calc(100% - 24px)); display: flex; padding: 6px; border-radius: 36px;
+    position: fixed; left: 0; right: 0; margin: 0 auto; bottom: max(12px, calc(var(--safe-b) - 14px)); z-index: 15;   /* centered without a transform, so the swell grows evenly from the middle */
+    width: min(460px, calc(100% - 16px)); display: flex; padding: 6px; border-radius: 36px;
     /* smooth frosted glass: enough blur that what's behind turns into soft color, not busy detail */
     background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.15));
     -webkit-backdrop-filter: blur(8px) saturate(180%); backdrop-filter: blur(8px) saturate(180%);
@@ -577,7 +577,7 @@
   .hold-fill { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,122,255,.22); transform-origin: left center; transform: scaleX(0); transition: transform .18s cubic-bezier(.23,1,.32,1); }
   .holding .hold-fill { transform: scaleX(1); transition: transform .65s linear; }   /* fills while you hold; let go early and it drains */
   .hold-lbl { position: relative; display: inline-flex; align-items: center; gap: 8px; }
-  .toast { position: fixed; left: 0; right: 0; margin: 0 auto; bottom: calc(100px + var(--safe-b)); z-index: 20; width: max-content; max-width: calc(100% - 32px);
+  .toast { position: fixed; left: 0; right: 0; margin: 0 auto; bottom: calc(86px + var(--safe-b)); z-index: 20; width: max-content; max-width: calc(100% - 32px);
     display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 18px; border-radius: 999px; background: rgba(28,28,30,.88); color: #fff; font-size: 15px; font-weight: 500;
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,.2);
     opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity .2s ease-out, transform .3s cubic-bezier(.23,1,.32,1); }
