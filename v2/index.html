@@ -43,7 +43,7 @@
   }
   /* native feel: no font inflation, no pull-to-refresh / page rubber-band; controls aren't text you can select */
   html { -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
-  button, .row[onclick], .tab, .chip, .swatch, .cdot, .act, .notice, .grabber {
+  button, .row[onclick], .tab, .chip, .swatch, .cdot, .act, .grabber {
     -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation;
   }
   input, select, textarea { font-size: max(16px, 1em); }   /* under 16px, iPhone/iPad zoom the page on focus */
@@ -84,7 +84,7 @@
     .glass, .lglass { background: rgba(255,255,255,.9); }
   }
   /* the bezel: a thin ring that is bright where light hits the curve (top-left, bottom-right) */
-  .glass::before, .lglass:not(.modal)::before, .card::before, .tab-ind::before, .dept-btn::before, .edit-btn::before, .chip::before, .notice-card::before {
+  .glass::before, .lglass:not(.modal)::before, .card::before, .tab-ind::before, .dept-btn::before, .edit-btn::before, .chip::before {
     content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1; border-radius: inherit; pointer-events: none;
     padding: 1.5px; background: var(--bezel);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -146,34 +146,10 @@
   }
   .add-btn .plus { font-size: 22px; line-height: 1; margin-top: -2px; }
 
-  /* ---------- iOS-style notification banner (expired food / sound reminder) ---------- */
-  .notice {
-    position: fixed; left: 0; right: 0; top: calc(10px + var(--safe-t)); z-index: 40; margin: 0 auto;
-    width: min(440px, calc(100% - 20px)); cursor: pointer;
-    visibility: hidden; transform: translateY(calc(-100% - 24px));
-    transition: transform .45s var(--spring), visibility 0s .45s;
-  }
-  .notice.show { visibility: visible; transform: none; transition: transform .6s var(--spring); }
-  .notice-card {
-    position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 12px;
-    padding: 12px 14px 13px; border-radius: 24px;
-    background: var(--sheen-clear), rgba(248,248,250,.5);
-    -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
-    box-shadow: var(--rim), 0 14px 40px rgba(15,23,42,.18), 0 2px 8px rgba(15,23,42,.08);
-  }
-  .notice:active .notice-card { transform: scale(.98); transition: transform .15s; }
-  /* a second card peeking out underneath when more than one item has expired */
-  .notice-behind { display: none; position: absolute; z-index: 0; left: 12px; right: 12px; top: 12px; bottom: -9px; border-radius: 22px; background: rgba(238,238,243,.5); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); box-shadow: var(--spec), 0 10px 24px rgba(15,23,42,.12); }
-  .notice.stack .notice-behind { display: block; }
-  .notice-icon { position: relative; flex-shrink: 0; width: 40px; height: 40px; margin-top: 1px; }
-  .notice-icon img { display: block; width: 40px; height: 40px; border-radius: 10px; -webkit-touch-callout: none; -webkit-user-drag: none; pointer-events: none; }
-  .notice-badge { position: absolute; top: -6px; right: -7px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: #ff3b30; color: #fff; font-size: 12px; font-weight: 700; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 2px rgba(246,246,248,.95); }
-  .notice-badge.show { display: inline-flex; }
-  .notice-main { flex: 1; min-width: 0; }
-  .notice-top { display: flex; align-items: baseline; gap: 8px; }
-  .notice-title { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: #111; line-height: 1.3; overflow-wrap: anywhere; }
-  .notice-time { font-size: 13px; color: #8e8e93; white-space: nowrap; }
-  .notice-text { font-size: 15px; color: #3a3a3c; line-height: 1.3; margin-top: 2px; overflow-wrap: anywhere; }
+  /* small inline hint: iPad/iPhone need one tap before the alarm can make sound */
+  .soundhint { display: none; align-items: center; gap: 8px; margin: 12px 28px 0; padding: 10px 14px; border-radius: 14px; background: rgba(0,122,255,.1); color: var(--blue); font-size: 15px; font-weight: 600; cursor: pointer; }
+  .soundhint.show { display: flex; }
+  .soundhint .ic { width: 18px; height: 18px; flex-shrink: 0; }
 
   /* ring that highlights the card the app just moved to */
   .card.spotlight::after { content: ""; position: absolute; top: -7px; right: -7px; bottom: -7px; left: -7px; border-radius: 32px; border: 3px solid rgba(239,68,68,.8); pointer-events: none; animation: spot 1.4s ease-out forwards; }
@@ -611,20 +587,20 @@
 
   /* iPhone/iPad "Reduce Transparency" setting */
   @media (prefers-contrast: more) {
-    .glass, .lglass, .modal, .card, .notice-card { background-color: rgba(255,255,255,.96); }
+    .glass, .lglass, .modal, .card { background-color: rgba(255,255,255,.96); }
     .card { box-shadow: inset 0 0 0 2px rgba(15,23,42,.35); }
   }
   @media (prefers-reduced-transparency: reduce) {
-    .lglass, .notice-card { background: rgba(255,255,255,.94); }
+    .lglass { background: rgba(255,255,255,.94); }
     .modal { background-image: none; background-color: rgba(255,255,255,.94); }
   }
 
   @media (max-width: 400px) { .edit-btn { font-size: 0; gap: 0; width: 44px; padding: 0; } .edit-btn .ic { font-size: 18px; } }
 
   @media print {
-    .tabbar, .notice, .overlay, .add-btn, .sortwrap, .cbtns, #histChips, body::before { display: none !important; }
+    .tabbar, .soundhint, .overlay, .add-btn, .sortwrap, .cbtns, #histChips, body::before { display: none !important; }
     body { padding-bottom: 0; }
-    .glass, .lglass, .card, .chip, .notice-card { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: none !important; border: 1px solid #ccc; }
+    .glass, .lglass, .card, .chip { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: none !important; border: 1px solid #ccc; }
     .glass::before, .lglass::before, .card::before, .dept-btn::before, .edit-btn::before, .chip::before { display: none; }
     .row, .card { break-inside: avoid; }
   }
@@ -654,6 +630,7 @@
         <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ruleTime">Discard after 4 hours</span></span>
       </div>
   </header>
+  <div class="soundhint" id="soundHint" role="status"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>Tap anywhere to turn on the alarm sound</div>
 
   <div class="toolbar">
     <div class="count" id="itemCount"></div>   <!-- "1 expired · 2 due soon · 5 OK" -->
@@ -746,20 +723,8 @@
   </div>
 </main>
 
-<!-- iOS-style notification: "Beef in Kitchen has expired" (tap anywhere → go to that card) -->
 <!-- "Beef deleted · Undo" -->
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
-
-<div class="notice" id="notice" role="alert" aria-live="assertive">
-  <div class="notice-behind"></div>
-  <div class="notice-card">
-    <div class="notice-icon"><img src="../apple-touch-icon.png" alt="" draggable="false"><span class="notice-badge" id="noticeBadge"></span></div>
-    <div class="notice-main">
-      <div class="notice-top"><span class="notice-title" id="noticeTitle"></span><span class="notice-time" id="noticeTime"></span></div>
-      <div class="notice-text" id="noticeText"></div>
-    </div>
-  </div>
-</div>
 
 <!-- ================= TAB BAR ================= -->
 <nav class="tabbar lglass" id="tabbar">
@@ -1359,47 +1324,12 @@ function renderAlerts() {
   renderNotice();
 }
 
-/* ---------- iOS-style notification ---------- */
-let noticeKey = '', autoNotice = null;   // autoNotice: short "expired, restarted" note while Auto-reset is on
+/* ---------- expired food: no pop-up; the red card, alarm, summary line and tab badge say it ---------- */
 // expired items that need a person to tap Stop (oldest first); auto-reset ones restart by themselves
 function urgentTimers() { return timers.filter(t => t.state === 'ringing' && !t.autoRestartAt).sort((a, b) => a.endAt - b.endAt); }
-function where(t) { return `${t.name} in ${deptName(t.dept)}`; }
-function agoText(ms) {
-  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
-  return s < 60 ? 'now' : s < 3600 ? `${Math.floor(s / 60)}m ago` : `${Math.floor(s / 3600)}h ago`;
-}
+// iPad/iPhone block all sound until the screen is touched once after the app opens
 function renderNotice() {
-  const urgent = urgentTimers();
-  let mode = '', title = '', text = '', when = 0;
-  if (urgent.length) {
-    const t = urgent[0], others = urgent.slice(1).map(where);
-    mode = 'urgent'; when = t.endAt;
-    title = `${where(t)} has expired`;
-    text = others.length
-      ? `Also expired: ${others.slice(0, 2).join(', ')}${others.length > 2 ? ` and ${others.length - 2} more` : ''}. Tap anywhere to go to ${t.name} first.`
-      : 'Tap anywhere to go to it, then tap Stop alarm.';
-  } else if (autoNotice && Date.now() < autoNotice.until) {
-    mode = 'auto'; when = autoNotice.at;
-    title = `${autoNotice.label} has expired`;
-    text = 'Auto-reset is on, so its timer started again.';
-  } else if (settings.sound && !audioReady() && timers.some(t => t.state === 'running')) {
-    // iPad/iPhone block all sound until the screen is touched once after the app opens
-    mode = 'sound';
-    title = 'Tap anywhere to allow the alarm sound';
-    text = 'Needed once each time the app opens, so you hear it when food expires.';
-  }
-  const key = [mode, title, text, urgent.length, when ? agoText(when) : ''].join('|');
-  if (key === noticeKey) return;
-  noticeKey = key;
-  const n = $('notice');
-  if (!mode) { n.classList.remove('show'); return; }
-  $('noticeTitle').textContent = title;
-  $('noticeText').textContent = text;
-  $('noticeTime').textContent = when ? agoText(when) : '';
-  $('noticeBadge').textContent = urgent.length;
-  $('noticeBadge').classList.toggle('show', urgent.length > 1);
-  n.classList.toggle('stack', urgent.length > 1);
-  n.classList.add('show');
+  $('soundHint').classList.toggle('show', !!settings.sound && !audioReady() && timers.some(t => t.state === 'running'));
 }
 // bring a food card into view (switching tab / department if needed) and ring it
 function goToCard(t) {
@@ -1421,14 +1351,10 @@ function onAnyTap(e) {
   unlockAudio();
   if (settings.wake && !wakeLock) applyWakeLock();
   const urgent = urgentTimers();
-  const onNotice = e.target.closest && e.target.closest('#notice');
-  if (!urgent.length) {
-    if (onNotice && autoNotice && Date.now() < autoNotice.until + 500) { const t = timers.find(x => x.id === autoNotice.id); autoNotice = null; renderNotice(); goToCard(t); }
-    return;
-  }
+  if (!urgent.length) return;
   // a sheet that was already open (e.g. half-typed Add Food) can still be finished
-  if (!onNotice && e.target.closest && e.target.closest('.overlay.show:not(.closing) .modal, #toast')) return;
-  const card = !onNotice && e.target.closest && e.target.closest('.card');
+  if (e.target.closest && e.target.closest('.overlay.show:not(.closing) .modal, #toast')) return;
+  const card = e.target.closest && e.target.closest('.card');
   if (curTab === 'kitchen' && card && urgent.some(t => t.id === card.dataset.id)) return;
   e.preventDefault(); e.stopPropagation();
   goToCard(urgent[0]);
@@ -1721,7 +1647,6 @@ function tick() {
         // happened — food that ran out while the app was closed or asleep still waits for someone to tap Stop.
         if (settings.autoReset && now - t.endAt < 60000) {
           t.autoRestartAt = now + 1800;
-          autoNotice = { id: t.id, label: where(t), at: t.endAt, until: now + 6000 };
         }
         save(); needRender = true;
       }
