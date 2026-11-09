@@ -323,6 +323,12 @@
   .tab.on[data-tab="kitchen"] .ic path, .tab.on[data-tab="settings"] .ic path, .tab.on[data-tab="history"] .ic circle { fill: currentColor; }
   .tab.on[data-tab="history"] .ic path { stroke: #fff; }
   .tab.on[data-tab="settings"] .ic circle { fill: #fff; stroke: none; }
+  /* slimmer, like Walmart's bar: less padding, a hairline bezel */
+  .tabbar { padding: 4px; }
+  .tabbar.lglass::before, .tab-ind::before { padding: 1px; }
+  .tab-ind { top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3); }
+  .tab { padding: 6px 4px 5px; gap: 1px; }
+  .tab .ic { font-size: 25px; }
 
   /* ---------- sheets / pop-ups ---------- */
   .overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,.22); }
@@ -1815,7 +1821,7 @@ function speed(hist) { const a = hist[0], b = hist[hist.length - 1]; return b[0]
 (function () {
   const bar = $('tabbar'), ind = $('tabInd');
   let d = null, draggedAt = 0;
-  const slot = () => (bar.clientWidth - 12) / 3;
+  const slot = () => (bar.clientWidth - 8) / 3;
   bar.addEventListener('pointerdown', e => {
     if (e.button > 0) return;
     d = { id: e.pointerId, x0: e.clientX, start: TABS.indexOf(curTab) * slot(), on: false, hist: [[e.timeStamp, e.clientX]] };
