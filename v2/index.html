@@ -689,6 +689,10 @@
     <div class="group glass" id="deptList"></div>
     <div class="gnote">Each department keeps its own food cards. Tap to switch, Edit to rename or delete.</div>
 
+    <div class="glabel">Quick Add</div>
+    <div class="group glass" id="quickList"></div>
+    <div class="gnote">Foods staff can tap in Add Food instead of typing the name.</div>
+
     <div class="glabel">App</div>
     <div class="group glass">
       <div class="row" onclick="toggleSetting('sound')">
@@ -1044,20 +1048,39 @@ function buildSwatches(containerId, selected, onPick) {
 /* ---------- add sheet ---------- */
 function pickAddColor(key) { addColor = key; buildSwatches('addSwatchRow', addColor, pickAddColor); }
 function showTempError(on) { $('tempErr').classList.toggle('show', on); $('foodTemp').classList.toggle('bad', on); }
-const RECENT_STORE = 'v2.kitchenRecents';
-function recents() {
-  let r = getJSON(RECENT_STORE, null);
-  if (!Array.isArray(r)) {   // first time: learn from history and the cards already running
-    r = []; const seen = new Set();
-    timers.concat(history).forEach(x => { const k = (x.name || '').toLowerCase(); if (x.name && x.name !== 'Food' && !seen.has(k)) { seen.add(k); r.push({ name: x.name, color: x.color || 'slate' }); } });
-  }
-  return r.filter(x => x && x.name).slice(0, 12);
+// Quick Add: only the foods the owner sets up in Settings (nothing is added automatically)
+const QUICK_STORE = 'v2.kitchenQuick';
+function recents() { const r = getJSON(QUICK_STORE, []); return Array.isArray(r) ? r.filter(x => x && x.name) : []; }
+function saveQuick(list) { setJSON(QUICK_STORE, list); }
+function quickRows() {
+  return recents().map((x, i) =>
+    `<div class="row" onclick="openQuickEdit(${i})"><span class="ric tile" style="background:${dotOf(x.color)}">${icon('tag')}</span><span class="rtxt">${esc(x.name)}</span><span class="rchev">${icon('chevR')}</span></div>`).join('') +
+    `<div class="row blue" onclick="openQuickEdit(-1)"><span class="ric">${icon('plus')}</span><span class="rtxt">Add Quick Food</span></div>`;
 }
-function rememberRecents(items) {
-  let r = recents();
-  items.forEach(it => { if (it.name === 'Food') return; r = r.filter(x => x.name.toLowerCase() !== it.name.toLowerCase()); r.unshift({ name: it.name, color: it.color }); });
-  setJSON(RECENT_STORE, r.slice(0, 12));
+let quickColor = 'slate';
+function openQuickEdit(i) {
+  const x = i >= 0 ? recents()[i] : null;
+  quickColor = x ? x.color : 'slate';
+  openSheet(sheetNav(x ? 'Edit Quick Food' : 'Add Quick Food', NAV_CANCEL, `<button class="nav-btn strong" onclick="saveQuickEdit(${i})">Save</button>`) +
+    `<div class="form-group"><label class="frow"><span>Name</span><input type="text" id="quickName" autocomplete="off" maxlength="60" value="${x ? esc(x.name) : ''}" placeholder="Beef Pho Broth" enterkeyhint="done"></label></div>` +
+    `<div class="field-err" id="quickErr"></div>` +
+    `<div class="slabel">Card color</div><div class="swatches" id="quickSwatches"></div>` +
+    (x ? `<div class="form-group"><button class="row-btn destructive" onclick="deleteQuick(${i})">Remove from Quick Add</button></div>` : ''));
+  const paint = () => buildSwatches('quickSwatches', quickColor, k => { quickColor = k; paint(); });
+  paint();
+  $('quickName').addEventListener('keydown', e => { if (e.key === 'Enter') saveQuickEdit(i); });
+  $('quickName').addEventListener('input', () => $('quickErr').classList.remove('show'));
+  if (!x) setTimeout(() => $('quickName').focus(), 60);
 }
+function saveQuickEdit(i) {
+  const name = $('quickName').value.trim(), list = recents();
+  const err = msg => { $('quickErr').textContent = msg; $('quickErr').classList.add('show'); $('quickName').focus(); };
+  if (!name) return err('Type a food name.');
+  if (list.some((x, j) => j !== i && x.name.toLowerCase() === name.toLowerCase())) return err('That food is already in Quick Add.');
+  if (i >= 0) list[i] = { name, color: quickColor }; else list.push({ name, color: quickColor });
+  saveQuick(list); closeSheet(); renderSettings();
+}
+function deleteQuick(i) { const list = recents(); list.splice(i, 1); saveQuick(list); closeSheet(); renderSettings(); }
 function paintRecents() {
   const r = recents(), cur = $('foodName').value.trim().toLowerCase();
   $('recentWrap').style.display = r.length ? '' : 'none';
@@ -1101,7 +1124,6 @@ function startTimer() {
     maxTemp: settings.maxTemp   // the limit at the time — changing it later mustn't re-flag this food
   });
   enterIds.add(id);
-  rememberRecents([{ name, color: addColor }]);
   save(); closeAdd(); render();
   // the list is sorted, so the new card can land off-screen: bring it into view and light it up blue
   const card = document.querySelector(`.card[data-id="${id}"]`);
@@ -1571,6 +1593,7 @@ function renderSettings() {
   $('valMin').textContent = settings.minTemp + '°F';
   $('valHours').textContent = settings.hours + (settings.hours === 1 ? ' hour' : ' hours');
   $('deptList').innerHTML = deptRows(true); focusableRows($('deptList'));
+  $('quickList').innerHTML = quickRows(); focusableRows($('quickList'));
   $('swSound').classList.toggle('on', settings.sound);
   $('swAutoReset').classList.toggle('on', settings.autoReset);
   $('swWake').classList.toggle('on', settings.wake);
