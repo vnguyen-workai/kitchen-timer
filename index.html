@@ -323,12 +323,36 @@
   }
   .tabbar.lglass::before { display: none; }
   .tab-ind::before { display: none; }
-  /* the bar is mostly clear now: a faint white halo keeps icons and words readable over dark text or photos behind it */
-  .tab .tl { text-shadow: 0 0 3px rgba(255,255,255,.95), 0 0 8px rgba(255,255,255,.7); }
-  .tab .ic { filter: drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 5px rgba(255,255,255,.6)); }
   .tab-ind { top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3); }
   .tab { padding: 6px 4px 5px; gap: 1px; }
   .tab .ic { font-size: 25px; }
+
+  /* ---- Liquid Glass rulebook (~/.claude/skills/apple-liquid-glass — web heuristics, not official Apple values) ----
+     "Regular" material for the control layer: readable white glass with restrained diffusion, a darkened 1px edge,
+     a narrow top highlight and a soft, low shadow. No glows, no big white gradients, accent only on the selected tab. */
+  :root {
+    --glass-fill: rgba(255,255,255,.66);
+    --glass-blur: 18px;
+    --glass-sat: 130%;
+    --glass-edge: rgba(17,24,39,.11);       /* the darkened edge */
+    --glass-rim: rgba(255,255,255,.55);     /* narrow light-catching rim just inside it */
+    --glass-highlight: rgba(255,255,255,.75);
+    --glass-shadow: 0 9px 28px rgba(0,0,0,.10);
+    --glass-select: rgba(120,135,150,.16);
+  }
+  .tabbar {
+    border-radius: 999px;
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)); backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 0 0 1px var(--glass-rim), 0 0 0 1px var(--glass-edge), var(--glass-shadow);
+  }
+  /* concentric: both are full capsules, so the pill's curve = bar's curve minus the 4px inset */
+  .tab-ind { border-radius: 999px; background: var(--glass-select); }
+  .tab:focus-visible { outline: 2px solid var(--blue); outline-offset: -4px; border-radius: 999px; }
+  .tab:focus:not(:focus-visible) { outline: none; }
+  /* glass is for controls floating over content; the sort button sits in the page, so it's a plain fill */
+  .sortwrap.lglass { background: rgba(120,120,128,.12); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  .sortwrap.lglass::before { display: none; }
 
   /* ---------- sheets / pop-ups ---------- */
   .overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(15,23,42,.22); }
@@ -343,9 +367,10 @@
   @keyframes dimOut { to { background-color: rgba(15,23,42,0); } }
   /* max-height 100%: the overlay is sized to what the on-screen keyboard leaves visible (fitOverlays) */
   .modal { width: 100%; max-width: 440px; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; border-radius: 30px; padding: 26px 24px 24px; animation: popIn .45s var(--spring) both;
-    background-image: var(--sheen-clear); background-color: rgba(255,255,255,.46);
-    -webkit-backdrop-filter: blur(18px) saturate(180%); backdrop-filter: blur(18px) saturate(180%);
-    box-shadow: var(--spec), var(--rim), 0 20px 50px rgba(15,23,42,.18);
+    /* sheets hold forms: the same Regular glass, a little more solid so fields and text stay crisp */
+    background-image: none; background-color: rgba(255,255,255,.8);
+    -webkit-backdrop-filter: blur(22px) saturate(130%); backdrop-filter: blur(22px) saturate(130%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 0 0 1px rgba(17,24,39,.08), 0 20px 50px rgba(15,23,42,.16);
   }
   /* the glass only scales and its contents fade — fading the glass makes its blur flicker on/off */
   .overlay.show .modal > * { animation: kidsIn .3s ease-out both; }
@@ -426,6 +451,19 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     .card.ringing { box-shadow: 0 0 0 4px rgba(220,38,38,.3); }
+    .tabbar.pulse, .tab-ind.squish { animation: none; }
+  }
+
+  /* glass fallbacks: the bar and sheets must stay readable with no see-through at all */
+  @media (prefers-reduced-transparency: reduce) {
+    .tabbar, .modal { background: rgba(250,250,252,.97); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+  @media (prefers-contrast: more) {
+    .tabbar, .modal { background: rgba(255,255,255,.97); box-shadow: 0 0 0 1.5px rgba(17,24,39,.45), var(--glass-shadow); }
+    .tab { color: #000; }
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .tabbar, .modal { background: rgba(245,246,248,.96); }
   }
 </style>
 </head>
@@ -537,9 +575,9 @@
 </main>
 
 <!-- ================= TAB BAR ================= -->
-<nav class="tabbar lglass" id="tabbar">
+<nav class="tabbar lglass" id="tabbar" aria-label="Primary">
   <div class="tab-ind" id="tabInd"></div>
-  <button class="tab on" data-tab="kitchen" onclick="showTab('kitchen')"><span data-ic="home"></span><span class="tl" id="tabKitchenLabel">Kitchen</span><span class="tbadge" id="tabBadge"></span></button>
+  <button class="tab on" data-tab="kitchen" aria-current="page" onclick="showTab('kitchen')"><span data-ic="home"></span><span class="tl" id="tabKitchenLabel">Kitchen</span><span class="tbadge" id="tabBadge"></span></button>
   <button class="tab" data-tab="history" onclick="showTab('history')"><span data-ic="clock"></span><span class="tl">History</span></button>
   <button class="tab" data-tab="settings" onclick="showTab('settings')"><span data-ic="gear"></span><span class="tl">Settings</span></button>
 </nav>
@@ -1132,7 +1170,7 @@ function showTab(name) {
   $('viewKitchen').classList.toggle('on', name === 'kitchen');
   $('viewHistory').classList.toggle('on', name === 'history');
   $('viewSettings').classList.toggle('on', name === 'settings');
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.tab === name; b.classList.toggle('on', on); on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
   const ind = $('tabInd');
   ind.style.translate = TABS.indexOf(name) * 100 + '% 0';
   // stretch the bubble + swell the bar; a tap mid-swell lets the running one finish instead of snapping back to the start
