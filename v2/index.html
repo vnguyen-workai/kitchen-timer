@@ -573,6 +573,30 @@
   .row:active .ios-sw::after { width: 33px; }
   .row:active .ios-sw.on::after { transform: translateX(14px); }
 
+
+  /* ---- v2 UX round: summary, quick add, Discarded, hold-to-reset, Undo ---- */
+  .count { font-size: 15px; font-weight: 500; color: var(--label2); }
+  .sum.exp { color: #d70015; font-weight: 700; } .sum.due { color: #c93400; font-weight: 700; } .sum.ok { color: #248a3d; font-weight: 600; }
+  .recents { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 2px 4px; }
+  .rchip { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px; border-radius: 999px; border: none; background: rgba(255,255,255,.85);
+    font: inherit; font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(60,60,67,.12); transition: transform 160ms cubic-bezier(.2,0,0,1), background .15s; }
+  .rchip:active { transform: scale(.95); }
+  .rchip.on { background: var(--blue); color: #fff; box-shadow: none; }
+  .rdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1.5px rgba(255,255,255,.7); }
+  #recentWrap .slabel { margin-top: 14px; }
+  .act.silence { flex: 0 0 auto; padding: 0 20px; background: var(--fill); color: var(--ink); box-shadow: none; }
+  .act.holdable { position: relative; overflow: hidden; }
+  .hold-fill { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,122,255,.22); transform-origin: left center; transform: scaleX(0); transition: transform .18s cubic-bezier(.23,1,.32,1); }
+  .holding .hold-fill { transform: scaleX(1); transition: transform .65s linear; }   /* fills while you hold; let go early and it drains */
+  .hold-lbl { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+  .toast { position: fixed; left: 0; right: 0; margin: 0 auto; bottom: calc(100px + var(--safe-b)); z-index: 20; width: max-content; max-width: calc(100% - 32px);
+    display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 18px; border-radius: 999px; background: rgba(28,28,30,.88); color: #fff; font-size: 15px; font-weight: 500;
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity .2s ease-out, transform .3s cubic-bezier(.23,1,.32,1); }
+  .toast.show { opacity: 1; transform: none; pointer-events: auto; }
+  .toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .toast button { flex-shrink: 0; height: 36px; padding: 0 16px; border: none; border-radius: 999px; background: rgba(255,255,255,.18); color: #64b5ff; font: inherit; font-weight: 700; cursor: pointer; }
+
   /* iPhone/iPad "Reduce Transparency" setting */
   @media (prefers-contrast: more) {
     .glass, .lglass, .modal, .card, .notice-card { background-color: rgba(255,255,255,.96); }
@@ -620,9 +644,10 @@
   </header>
 
   <div class="toolbar">
-    <div class="count" id="itemCount">0 items</div>
+    <div class="count" id="itemCount"></div>   <!-- "1 expired · 2 due soon · 5 OK" -->
     <span class="sortwrap lglass">Sort by:
       <select id="sortSel" onchange="setSort(this.value)">
+        <option value="time">Time left</option>
         <option value="name">Name</option>
         <option value="color">Color</option>
       </select>
@@ -706,6 +731,9 @@
 </main>
 
 <!-- iOS-style notification: "Beef in Kitchen has expired" (tap anywhere → go to that card) -->
+<!-- "Beef deleted · Undo" -->
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
+
 <div class="notice" id="notice" role="alert" aria-live="assertive">
   <div class="notice-behind"></div>
   <div class="notice-card">
@@ -736,6 +764,7 @@
       <button class="nav-btn strong" onclick="startTimer()">Start</button>
     </div>
     <p class="fixed-note" id="addNote">Timer is set to <b>4 hours</b></p>
+    <div id="recentWrap"><div class="slabel">Quick add · tap one or more</div><div class="recents" id="recentRow"></div></div>
     <div class="form-group">
       <label class="frow"><span>Food</span><input type="text" id="foodName" placeholder="Beef, Crab, Chicken…" autocomplete="off" maxlength="60" enterkeyhint="next"></label>
       <label class="frow"><span>Start temp</span><input type="number" id="foodTemp" inputmode="decimal" step="any" min="-99" max="999" placeholder="Optional" enterkeyhint="done"><span class="unit">°F</span></label>
@@ -818,10 +847,10 @@ let timers = [];   // {id,name,dept,total,remaining,state:'running'|'ringing'|'d
 let history = [];  // {id,name,dept,deptName,color,temp,startAt,endAt,endedAt,outcome:'expired'|'reset'|'removed'}
 let depts = [];    // {id,name,icon}
 let curDept = 'kitchen';
-let settings = { autoReset: false, sound: true, sort: 'name', maxTemp: 70, minTemp: 41, hours: 4, wake: true };
+let settings = { autoReset: false, sound: true, sort: 'time', maxTemp: 70, minTemp: 41, hours: 4, wake: true };
 let addColor = 'slate';
 let colorEditId = null;
-let enterId = null, enterAll = false;
+const enterIds = new Set(); let enterAll = false;
 let curTab = 'kitchen';
 let histFilter = 'all';
 const DUE_SOON = 30 * 60;
@@ -861,7 +890,9 @@ function saveSettings() { setJSON(SET_STORE, settings); }
 function loadSettings() {
   const s = getJSON(SET_STORE, {});
   settings.autoReset = !!s.autoReset; settings.sound = s.sound !== false;
-  settings.sort = ['name', 'color'].indexOf(s.sort) >= 0 ? s.sort : 'name';
+  // most urgent first by default; a sort someone picked on purpose is kept
+  settings.sortChosen = !!s.sortChosen;
+  settings.sort = settings.sortChosen && ['time', 'name', 'color'].indexOf(s.sort) >= 0 ? s.sort : 'time';
   settings.maxTemp = Number.isFinite(s.maxTemp) ? s.maxTemp : 70;
   settings.minTemp = Number.isFinite(s.minTemp) ? s.minTemp : 41;
   settings.hours = (Number.isFinite(s.hours) && s.hours >= 1 && s.hours <= 12) ? s.hours : 4;
@@ -1013,18 +1044,57 @@ function buildSwatches(containerId, selected, onPick) {
 /* ---------- add sheet ---------- */
 function pickAddColor(key) { addColor = key; buildSwatches('addSwatchRow', addColor, pickAddColor); }
 function showTempError(on) { $('tempErr').classList.toggle('show', on); $('foodTemp').classList.toggle('bad', on); }
+const RECENT_STORE = 'v2.kitchenRecents';
+let addPicks = [];
+function recents() {
+  let r = getJSON(RECENT_STORE, null);
+  if (!Array.isArray(r)) {   // first time: learn from history and the cards already running
+    r = []; const seen = new Set();
+    timers.concat(history).forEach(x => { const k = (x.name || '').toLowerCase(); if (x.name && x.name !== 'Food' && !seen.has(k)) { seen.add(k); r.push({ name: x.name, color: x.color || 'slate' }); } });
+  }
+  return r.filter(x => x && x.name).slice(0, 12);
+}
+function rememberRecents(items) {
+  let r = recents();
+  items.forEach(it => { if (it.name === 'Food') return; r = r.filter(x => x.name.toLowerCase() !== it.name.toLowerCase()); r.unshift({ name: it.name, color: it.color }); });
+  setJSON(RECENT_STORE, r.slice(0, 12));
+}
+function paintRecents() {
+  const r = recents();
+  $('recentWrap').style.display = r.length ? '' : 'none';
+  $('recentRow').innerHTML = r.map((x, i) => `<button class="rchip${addPicks.some(p => p.name === x.name) ? ' on' : ''}" onclick="togglePick(${i})"><span class="rdot" style="background:${dotOf(x.color)}"></span>${esc(x.name)}</button>`).join('');
+  paintStart();
+}
+function togglePick(i) {
+  const x = recents()[i]; if (!x) return;
+  addPicks = addPicks.some(p => p.name === x.name) ? addPicks.filter(p => p.name !== x.name) : addPicks.concat([x]);
+  paintRecents();
+}
+function addItems() {
+  const typed = $('foodName').value.trim();
+  const items = addPicks.map(p => ({ name: p.name, color: p.color }));
+  if (typed) items.push({ name: typed, color: addColor });
+  return items;
+}
+function paintStart() {
+  const n = addItems().length;
+  $('startBtn').textContent = n > 1 ? `Start ${n} Timers` : `Start ${settings.hours}h Timer`;
+  $('foodTemp').placeholder = n > 1 ? 'Same for all · optional' : 'Optional';
+}
 function openAdd() {
-  $('foodName').value = ''; $('foodTemp').value = ''; showTempError(false);
+  $('foodName').value = ''; $('foodTemp').value = ''; showTempError(false); addPicks = [];
   $('addNote').innerHTML = `Timer is set to <b>${settings.hours} hour${settings.hours === 1 ? '' : 's'}</b> · ${esc(deptName(curDept))}`;
   $('startBtn').textContent = `Start ${settings.hours}h Timer`;
   addColor = 'slate'; buildSwatches('addSwatchRow', addColor, pickAddColor);
+  paintRecents();
   showOverlay('overlay'); unlockAudio();
-  setTimeout(() => $('foodName').focus(), 50);
+  // with recent foods to tap, don't throw the keyboard over them; otherwise go straight to typing
+  if (!recents().length) setTimeout(() => $('foodName').focus(), 50);
 }
 function closeAdd() { hideOverlay('overlay'); }
 function startTimer() {
   if (!overlayOpen('overlay')) return;   // double-tap / double-Enter must not add the food twice
-  const name = $('foodName').value.trim() || 'Food';
+  const items = addItems(); if (!items.length) items.push({ name: 'Food', color: addColor });
   const total = holdSecs();
   const tempRaw = $('foodTemp').value.trim();
   const temp = tempRaw === '' ? NaN : Number(tempRaw);
@@ -1032,21 +1102,24 @@ function startTimer() {
   const badTemp = (tempRaw !== '' && !(temp >= -99 && temp <= 999)) || (tempRaw === '' && $('foodTemp').validity.badInput);
   if (badTemp) { showTempError(true); $('foodTemp').focus(); return; }
   const now = Date.now();
-  const id = uid();
-  timers.push({
-    id, name, dept: curDept, total, remaining: total, state: 'running',
-    startAt: now, endAt: now + total * 1000, created: now,
-    temp: Number.isFinite(temp) ? Math.round(temp * 10) / 10 : null, color: addColor, logged: false,
-    maxTemp: settings.maxTemp   // the limit at the time — changing it later mustn't re-flag this food
+  const ids = items.map(it => {
+    const id = uid();
+    timers.push({
+      id, name: it.name, dept: curDept, total, remaining: total, state: 'running',
+      startAt: now, endAt: now + total * 1000, created: now,
+      temp: Number.isFinite(temp) ? Math.round(temp * 10) / 10 : null, color: it.color, logged: false,
+      maxTemp: settings.maxTemp   // the limit at the time — changing it later mustn't re-flag this food
+    });
+    enterIds.add(id); return id;
   });
-  enterId = id;
+  rememberRecents(items);
   save(); closeAdd(); render();
-  // the list is sorted, so the new card can land off-screen: bring it into view and light it up blue
-  const card = document.querySelector(`.card[data-id="${id}"]`);
-  if (card) {
-    card.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+  // the list is sorted, so new cards can land off-screen: bring the first into view and light them up blue
+  ids.forEach((id, i) => {
+    const card = document.querySelector(`.card[data-id="${id}"]`); if (!card) return;
+    if (i === 0) card.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
     card.classList.add('spotlight', 'blue'); setTimeout(() => card.classList.remove('spotlight', 'blue'), 1500);
-  }
+  });
 }
 
 /* ---------- card color ---------- */
@@ -1094,15 +1167,25 @@ function stopRing(id) {
   if (!timers.some(x => x.state === 'ringing')) stopAlarm();   // silence immediately, don't wait for the tick
   save(); render(); ackCard(id, t.state === 'running' ? 0 : null);
 }
-function del(id, btn) {
+function del(id, btn, discarded) {
   if (Date.now() - (del.at || 0) < 500) return;   // the next card slides under the finger at once
   del.at = Date.now();
+  const t0 = timers.find(x => x.id === id); if (!t0) return;
+  const snap = JSON.parse(JSON.stringify(t0)), at = timers.indexOf(t0);
   const remove = () => {
-    const t = timers.find(x => x.id === id);
-    if (t && t.state === 'running') logRun(t, 'removed');
+    const t = timers.find(x => x.id === id); if (!t) return;
+    let histId = null;
+    if (t.state === 'running') { logRun(t, 'removed'); histId = history[0] && history[0].id; }
     timers = timers.filter(x => x.id !== id);
     if (!timers.some(x => x.state === 'ringing')) stopAlarm();
     save(); render();
+    // a wrong tap shouldn't lose the start time: offer Undo instead of asking first
+    showUndo(`${t.name} ${discarded ? 'discarded' : 'deleted'}`, () => {
+      if (timers.some(x => x.id === id)) return;
+      timers.splice(Math.min(at, timers.length), 0, snap);
+      if (histId) { history = history.filter(h => h.id !== histId); saveHistory(); if (curTab === 'history') renderHistory(); }
+      enterIds.add(id); save(); render();
+    });
   };
   const card = btn && btn.closest('.card');
   if (!card || reducedMotion || !card.animate) return remove();
@@ -1110,7 +1193,16 @@ function del(id, btn) {
   card.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(.92)' }],
     { duration: 200, easing: 'cubic-bezier(.23, 1, .32, 1)', fill: 'forwards' }).onfinish = remove;   // exits ease out too: no slow start
 }
-function setSort(v) { settings.sort = v; saveSettings(); render(); }
+let toastTimer = null;
+function showUndo(msg, undo) {
+  const el = $('toast');
+  $('toastMsg').textContent = msg;
+  $('toastUndo').onclick = () => { hideUndo(); undo(); };
+  el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(hideUndo, 5000);
+}
+function hideUndo() { clearTimeout(toastTimer); $('toast').classList.remove('show'); }
+function setSort(v) { settings.sort = v; settings.sortChosen = true; saveSettings(); render(); }
 
 /* ---------- formatting ---------- */
 function fmt(s) {
@@ -1149,17 +1241,22 @@ function render() {
   const mine = timers.filter(t => t.dept === curDept);
   $('empty').style.display = mine.length ? 'none' : 'block';
   document.querySelector('#viewKitchen .toolbar').style.display = mine.length ? '' : 'none';   // no "0 items / Sort by" clutter when empty
-  $('itemCount').textContent = mine.length + (mine.length === 1 ? ' item' : ' items');
+  // one glance: does anything need me?
+  const nExp = mine.filter(t => t.state === 'ringing').length, nDue = mine.filter(t => t.state === 'running' && t.remaining <= DUE_SOON).length;
+  const nOk = mine.filter(t => t.state === 'running').length - nDue, nDone = mine.filter(t => t.state === 'done').length;
+  $('itemCount').innerHTML = [nExp && `<span class="sum exp">${nExp} expired</span>`, nDue && `<span class="sum due">${nDue} due soon</span>`,
+    nOk && `<span class="sum ok">${nOk} OK</span>`, nDone && `<span>${nDone} done</span>`].filter(Boolean).join(' · ');
   const byName = (a, b) => NAME_ORDER.compare(a.name || '', b.name || '');
-  const order = mine.sort((a, b) => settings.sort === 'color'
-    ? (COLOR_ORDER.indexOf(a.color) - COLOR_ORDER.indexOf(b.color)) || byName(a, b)
+  const rank = t => t.state === 'ringing' ? 0 : t.state === 'running' ? 1 : 2;   // expired, then soonest to expire, then finished
+  const order = mine.sort((a, b) => settings.sort === 'time' ? (rank(a) - rank(b)) || (a.endAt - b.endAt) || byName(a, b)
+    : settings.sort === 'color' ? (COLOR_ORDER.indexOf(a.color) - COLOR_ORDER.indexOf(b.color)) || byName(a, b)
     : byName(a, b));
   wrap.innerHTML = '';
   order.forEach((t, i) => {
     const col = colorOf(t);
     const card = document.createElement('div');
     card.dataset.id = t.id;
-    const entering = !reducedMotion && (enterAll || t.id === enterId);
+    const entering = !reducedMotion && (enterAll || enterIds.has(t.id));
     card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '') + (entering ? ' enter' : '');
     if (entering && enterAll) card.style.animationDelay = Math.min(i, 6) * 40 + 'ms';   // department switch: cards arrive one after another
     if (justExpired.delete(t.id)) card.classList.add('just-expired');
@@ -1173,7 +1270,9 @@ function render() {
     const trash = `<button class="act trash press" onclick="del('${t.id}',this)" aria-label="Delete">${ICON_TRASH}</button>`;
     if (t.state === 'ringing') {
       pill = '<span class="pill exp"><span class="d"></span>Expired</span>';   // Apple: show a status only when it means something
-      btns = `<button class="act stop press" onclick="stopRing('${t.id}')">Stop alarm</button>` + trash;
+      // expired food gets thrown out: one tap silences, logs and clears it (Undo if it was a mistake); "Stop" keeps the card
+      btns = `<button class="act stop press" onclick="del('${t.id}',this,true)">${ICON_TRASH} Discarded</button>` +
+        `<button class="act silence press" onclick="stopRing('${t.id}')">Stop</button>`;
       label = '0:00:00'; rem = `<span class="rem exp">Time's up</span>`; w = 100; c = '#dc2626';
     } else if (t.state === 'done') {
       pill = '<span class="pill done">Done</span>';
@@ -1182,7 +1281,8 @@ function render() {
     } else {
       const due = t.remaining <= DUE_SOON;
       pill = due ? '<span class="pill due"><span class="d"></span>Due soon</span>' : '';   // the ticking timer already says "active"
-      btns = `<button class="act reset press" onclick="restart('${t.id}')">${ICON_RESET} Reset</button>` + trash;
+      // Reset restarts the holding time, so it needs a deliberate press-and-hold — a stray tap can't do it
+      btns = `<button class="act reset holdable" data-id="${t.id}" aria-label="Hold to reset"><span class="hold-fill"></span><span class="hold-lbl">${ICON_RESET} Reset</span></button>` + trash;
       label = fmt(t.remaining); rem = `<span class="rem">${ICON_CLOCK} remaining</span>`;
       w = (t.remaining / t.total * 100); c = barColor(t.remaining);
     }
@@ -1204,7 +1304,7 @@ function render() {
     timeEls.set(t.id, card.querySelector('.ctime'));
     barEls.set(t.id, card.querySelector('.pfill'));
   });
-  enterId = null; enterAll = false;
+  enterIds.clear(); enterAll = false;
   layoutGrid();
   renderAlerts();
   if (before.size) {
@@ -1304,7 +1404,7 @@ function onAnyTap(e) {
     return;
   }
   // a sheet that was already open (e.g. half-typed Add Food) can still be finished
-  if (!onNotice && e.target.closest && e.target.closest('.overlay.show:not(.closing) .modal')) return;
+  if (!onNotice && e.target.closest && e.target.closest('.overlay.show:not(.closing) .modal, #toast')) return;
   const card = !onNotice && e.target.closest && e.target.closest('.card');
   if (curTab === 'kitchen' && card && urgent.some(t => t.id === card.dataset.id)) return;
   e.preventDefault(); e.stopPropagation();
@@ -1829,6 +1929,31 @@ $('restName').addEventListener('input', saveName);
 $('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 $('foodTemp').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 $('foodTemp').addEventListener('input', () => showTempError(false));
+$('foodName').addEventListener('input', paintStart);
+
+/* ---------- Reset: press and hold (a stray tap can't restart a food's holding time) ---------- */
+(function () {
+  let hold = null;
+  const end = hint => {
+    if (!hold) return;
+    const h = hold; hold = null; clearTimeout(h.t); h.btn.classList.remove('holding');
+    if (hint && !h.done && Date.now() - h.at < 300) {   // it was a tap: say what to do
+      const l = h.btn.querySelector('.hold-lbl'); const was = l.innerHTML;
+      l.textContent = 'Hold to reset'; clearTimeout(h.btn.hintT); h.btn.hintT = setTimeout(() => { l.innerHTML = was; }, 1300);
+    }
+  };
+  $('timers').addEventListener('pointerdown', e => {
+    const btn = e.target.closest && e.target.closest('.holdable'); if (!btn || e.button > 0) return;
+    if (urgentTimers().length) return;   // while food is expired, taps go to it first
+    end(false);
+    hold = { btn, at: Date.now(), done: false, t: setTimeout(() => { hold.done = true; const id = btn.dataset.id; end(false); restart(id); }, 650) };
+    btn.classList.add('holding');
+  });
+  ['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, () => end(true)));
+  $('timers').addEventListener('pointerleave', e => { if (hold && e.target === hold.btn) end(false); }, true);   // slid off the button = cancel
+  // keyboard: Enter / Space on the focused button resets right away (the press is already deliberate)
+  $('timers').addEventListener('click', e => { const btn = e.target.closest && e.target.closest('.holdable'); if (btn && e.detail === 0) restart(btn.dataset.id); });
+})();
 // tapping the dim area closes a sheet — but not the 2nd tap of the double-tap that just opened it
 // (and not when a text drag inside the sheet ends outside it — the press has to start on the dim area too)
 ['overlay', 'colorOverlay', 'sheet'].forEach(id => {
