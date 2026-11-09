@@ -325,7 +325,7 @@
   .tab.on[data-tab="settings"] .ic circle { fill: #fff; stroke: none; }
   /* slimmer, like Walmart's bar: room on both sides, clear tinted glass, a hairline edge */
   .tabbar {
-    padding: 4px; width: min(440px, calc(100% - 32px)); bottom: max(14px, calc(var(--safe-b) - 8px));
+    padding: 4px; width: min(440px, calc(100% - 32px)); bottom: calc(14px + var(--safe-b) * .4);   /* iPhone ≈ 28pt, iPad with a home bar 22pt, no home bar 14pt: always clear of the home bar line */
     background: rgba(255,255,255,.06);   /* almost clear: what's behind shows through with its own color */
     -webkit-backdrop-filter: blur(4px) saturate(220%) brightness(1.04); backdrop-filter: blur(4px) saturate(220%) brightness(1.04);
     /* glass look from a soft bright glow inside the edge + a .5px line, not a thick border */
@@ -1841,7 +1841,7 @@ function speed(hist) { const a = hist[0], b = hist[hist.length - 1]; return b[0]
       d.on = true; try { bar.setPointerCapture(e.pointerId); } catch (err) {} ind.classList.add('lifted'); ind.style.transition = 'scale .2s cubic-bezier(.2, .8, .2, 1)';
     }
     const max = 2 * slot(); let x = d.start + dx;
-    if (x < 0) x = -rubberband(-x, slot()); else if (x > max) x = max + rubberband(x - max, slot());
+    if (x < 0) x = -rubberband(-x, 10); else if (x > max) x = max + rubberband(x - max, 10);   // a small give at the ends that never leaves the screen (the bar has 16pt room each side)
     ind.style.translate = x + 'px 0';
     d.hist.push([e.timeStamp, e.clientX]); if (d.hist.length > 5) d.hist.shift();
   });
