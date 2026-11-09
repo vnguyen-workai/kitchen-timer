@@ -1474,6 +1474,27 @@ function onFsChange() { layoutGrid(); if (curTab === 'settings') renderSettings(
 document.addEventListener('fullscreenchange', onFsChange);
 document.addEventListener('webkitfullscreenchange', onFsChange);
 document.addEventListener('visibilitychange', () => { applyWakeLock(); tick(); });
+/* ---------- pick up a new version by itself ----------
+   The home-screen app on iPhone/iPad keeps the old page in memory for days, so a pushed update never shows
+   until someone force-closes it. When the app comes back to the screen, check the server; if the page changed,
+   reload — but only when nobody is in the middle of something (sheet open, typing, alarm going). */
+(function () {
+  if (location.protocol === 'file:' || !window.fetch) return;
+  let base = null, pending = false, checking = false;
+  const get = () => fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : null).catch(() => null);
+  get().then(t => { base = t; });
+  const busy = () => document.querySelector('.overlay.show') || /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')
+    || timers.some(t => t.state === 'ringing');
+  const tryReload = () => { if (pending && document.visibilityState === 'visible' && !busy()) location.reload(); };
+  const check = () => {
+    if (checking || pending || document.visibilityState !== 'visible') return;
+    checking = true;
+    get().then(t => { checking = false; if (!t) return; if (base == null) { base = t; return; } if (t !== base) { pending = true; tryReload(); } });
+  };
+  document.addEventListener('visibilitychange', check);
+  window.addEventListener('pageshow', check);
+  setInterval(() => { check(); tryReload(); }, 10 * 60 * 1000);   // an iPad left open all day
+})();
 window.addEventListener('resize', () => { layoutGrid(); fitName(); });
 window.addEventListener('orientationchange', layoutGrid);
 
