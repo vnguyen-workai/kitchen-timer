@@ -496,6 +496,7 @@
   .modal .slabel { margin: 18px 16px 10px; font-size: 13px; text-transform: uppercase; color: var(--label2); }
   .modal .fixed-note { margin-bottom: 4px; font-size: 13px; }
   #overlay .swatches { margin-bottom: 6px; }
+  .modal .big-start { display: block; width: 100%; margin-top: 14px; padding: 16px; font-size: 18px; }
 
   @media (max-width: 639px) {
     .topbar { padding-left: 12px; padding-right: 12px; }
@@ -503,6 +504,55 @@
     header.largetitle { margin: 0 16px; }
     .topbar-title { max-width: 26vw; }
   }
+
+
+  /* ---- v2 round 3: cards, empty states, Settings tiles, iOS sheets and alerts ---- */
+  .cbadges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+  .pill.hotb { background: rgba(255,149,0,.16); color: #c93400; gap: 4px; }
+  .pill.hotb .ic { font-size: 15px; }
+  .flabel { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; color: var(--label2); }
+  #timers.narrow .flabel { font-size: 12px; letter-spacing: 0; }
+  .fdate { color: var(--label2); }
+  .fval.hotv { color: #d70015; }
+  .count { font-size: 15px; font-weight: 500; color: var(--label2); }
+  .card.done { opacity: 1; }
+  .card.done .ctime { color: rgba(60,60,67,.3); }
+
+  .empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 24px 32px; }
+  .empty-ic { display: inline-flex; width: 64px; height: 64px; align-items: center; justify-content: center; border-radius: 18px; background: var(--fill); color: var(--label2); font-size: 32px; margin-bottom: 6px; }
+  .empty-t { font-size: 20px; font-weight: 700; color: var(--ink); }
+  .empty-d { font-size: 15px; color: var(--label2); max-width: 300px; line-height: 1.35; }
+  .empty-btn { flex: none; margin-top: 12px; padding: 12px 26px; }
+
+  .row .ric.tile { width: 30px; height: 30px; border-radius: 7px; color: #fff; font-size: 18px; align-items: center; }
+  .row.danger .ric.tile, .row.blue .ric.tile { color: #fff; }
+  .t-red { background: #ff3b30; } .t-orange { background: #ff9500; } .t-green { background: #34c759; } .t-blue { background: #007aff; }
+  .t-indigo { background: #5856d6; } .t-pink { background: #ff2d55; } .t-gray { background: #8e8e93; }
+  .row + .row::before { left: 62px; }
+  .row .rcheck { color: var(--blue); }
+
+  /* iOS sheet bar on every sheet, stepper as Apple's −/+ control */
+  .modal .sheet-nav h2 { font-size: 17px; }
+  .stepper button { background: var(--fill); color: var(--blue); font-weight: 500; }
+  .row-btn { display: block; width: 100%; min-height: 52px; border: none; background: none; font: inherit; font-size: 17px; cursor: pointer; }
+  .row-btn.destructive { color: var(--red); }
+  .row-btn:active { background: rgba(120,120,128,.12); }
+  .modal .form-group + .form-group { margin-top: 18px; }
+  .form-group.steps { padding: 14px 18px; }
+  .form-group.steps ol { margin: 0; }
+
+  /* confirmations = iOS alert: small, centered on every device, buttons split by hairlines */
+  #sheet.alerting { align-items: center; padding: 16px; }
+  #sheet.alerting .modal { max-width: 290px; padding: 20px 0 0; border-radius: 22px; text-align: center; animation: popIn .3s cubic-bezier(.2, .9, .25, 1) both; background-color: rgba(250,250,252,.82); }
+  #sheet.alerting.closing .modal { animation: popOut .18s ease-in both; }
+  #sheet.alerting .grabber { display: none; }
+  .alert-t { padding: 0 20px; font-size: 17px; font-weight: 600; line-height: 1.3; color: var(--ink); }
+  .alert-btns { display: flex; margin-top: 18px; border-top: .5px solid var(--sep); }
+  .alert-btns button { flex: 1; height: 46px; border: none; background: none; font: inherit; font-size: 17px; color: var(--blue); cursor: pointer; }
+  .alert-btns button + button { border-left: .5px solid var(--sep); }
+  .alert-btns .destructive, .alert-btns .strong { font-weight: 600; }
+  .alert-btns .destructive { color: var(--red); }
+  .alert-btns button:active { background: rgba(120,120,128,.14); }
 
   /* iPhone/iPad "Reduce Transparency" setting */
   @media (prefers-contrast: more) {
@@ -561,7 +611,7 @@
   </div>
 
   <div id="timers"></div>
-  <div class="empty glass" id="empty">No items yet. Tap <b>+ Add Food</b> to start one.</div>
+  <div class="empty glass" id="empty"><span class="empty-ic" data-ic="chef"></span><div class="empty-t">No Food Yet</div><div class="empty-d">Add food to start its holding timer.</div><button class="btn blue press empty-btn" onclick="openAdd()">Add Food</button></div>
 </main>
 
 <!-- ================= HISTORY ================= -->
@@ -581,13 +631,13 @@
     <div class="glabel">Food safety rules</div>
     <div class="group glass">
       <div class="row" onclick="openTempSheet()">
-        <span class="ric" data-ic="thermo"></span><span class="rtxt">Max Temperature</span><span class="rval" id="valTemp">70°F</span><span class="rchev" data-ic="chevR"></span>
+        <span class="ric tile t-red" data-ic="thermo"></span><span class="rtxt">Max Temperature</span><span class="rval" id="valTemp">70°F</span><span class="rchev" data-ic="chevR"></span>
       </div>
       <div class="row" onclick="openMinTempSheet()">
-        <span class="ric" data-ic="thermo"></span><span class="rtxt">Min Temperature</span><span class="rval" id="valMin">41°F</span><span class="rchev" data-ic="chevR"></span>
+        <span class="ric tile t-blue" data-ic="thermo"></span><span class="rtxt">Min Temperature</span><span class="rval" id="valMin">41°F</span><span class="rchev" data-ic="chevR"></span>
       </div>
       <div class="row" onclick="openHoursSheet()">
-        <span class="ric" data-ic="clock"></span><span class="rtxt">Discard After</span><span class="rval" id="valHours">4 hours</span><span class="rchev" data-ic="chevR"></span>
+        <span class="ric tile t-orange" data-ic="clock"></span><span class="rtxt">Discard After</span><span class="rval" id="valHours">4 hours</span><span class="rchev" data-ic="chevR"></span>
       </div>
     </div>
 
@@ -598,38 +648,38 @@
     <div class="glabel">App</div>
     <div class="group glass">
       <div class="row" onclick="toggleSetting('sound')">
-        <span class="ric" data-ic="speaker"></span><span class="rtxt">Alarm Sound<div class="rsub">Beep when time is up</div></span><span class="ios-sw" id="swSound"></span>
+        <span class="ric tile t-pink" data-ic="speaker"></span><span class="rtxt">Alarm Sound<div class="rsub">Beep when time is up</div></span><span class="ios-sw" id="swSound"></span>
       </div>
       <div class="row" onclick="menuTestSound()">
-        <span class="ric" data-ic="bell"></span><span class="rtxt">Test Sound</span><span class="rchev" data-ic="chevR"></span>
+        <span class="ric tile t-orange" data-ic="bell"></span><span class="rtxt">Test Sound</span><span class="rchev" data-ic="chevR"></span>
       </div>
       <div class="row" onclick="toggleSetting('autoReset')">
-        <span class="ric" data-ic="reset"></span><span class="rtxt">Auto-reset<div class="rsub">When time is up: 3 beeps, then it counts down again</div></span><span class="ios-sw" id="swAutoReset"></span>
+        <span class="ric tile t-green" data-ic="reset"></span><span class="rtxt">Auto-reset<div class="rsub">When time is up: 3 beeps, then it counts down again</div></span><span class="ios-sw" id="swAutoReset"></span>
       </div>
       <div class="row" onclick="toggleSetting('wake')">
-        <span class="ric" data-ic="tablet"></span><span class="rtxt">Keep Screen Awake<div class="rsub" id="wakeSub">Screen stays on while the app is open</div></span><span class="ios-sw" id="swWake"></span>
+        <span class="ric tile t-blue" data-ic="tablet"></span><span class="rtxt">Keep Screen Awake<div class="rsub" id="wakeSub">Screen stays on while the app is open</div></span><span class="ios-sw" id="swWake"></span>
       </div>
       <div class="row" onclick="menuFullscreen()">
-        <span class="ric" data-ic="full"></span><span class="rtxt" id="fsLabel">Fullscreen</span><span class="rchev" data-ic="chevR"></span>
+        <span class="ric tile t-gray" data-ic="full"></span><span class="rtxt" id="fsLabel">Fullscreen</span><span class="rchev" data-ic="chevR"></span>
       </div>
       <div class="row" onclick="openInstall()">
-        <span class="ric" data-ic="install"></span><span class="rtxt">Install as App<div class="rsub" id="installSub">Add to your home screen</div></span><span class="rchev" data-ic="chevR"></span>
+        <span class="ric tile t-indigo" data-ic="install"></span><span class="rtxt">Install as App<div class="rsub" id="installSub">Add to your home screen</div></span><span class="rchev" data-ic="chevR"></span>
       </div>
     </div>
 
     <div class="glabel">Data</div>
     <div class="group glass">
       <div class="row blue" onclick="exportHistory()">
-        <span class="ric" data-ic="export"></span><span class="rtxt">Export History (CSV)<div class="rsub">Open in Excel or Google Sheets</div></span>
+        <span class="ric tile t-green" data-ic="export"></span><span class="rtxt">Export History (CSV)<div class="rsub">Open in Excel or Google Sheets</div></span>
       </div>
       <div class="row" onclick="menuDeleteFinished()">
-        <span class="ric" data-ic="check"></span><span class="rtxt">Delete Finished Cards<div class="rsub" id="subFinished">In this department</div></span>
+        <span class="ric tile t-gray" data-ic="check"></span><span class="rtxt">Delete Finished Cards<div class="rsub" id="subFinished">In this department</div></span>
       </div>
       <div class="row danger" onclick="menuClearAll()">
-        <span class="ric" data-ic="trash"></span><span class="rtxt" id="lblClearAll">Clear All Cards</span>
+        <span class="ric tile t-red" data-ic="trash"></span><span class="rtxt" id="lblClearAll">Clear All Cards</span>
       </div>
       <div class="row danger" onclick="clearHistory()">
-        <span class="ric" data-ic="trash"></span><span class="rtxt">Clear History</span>
+        <span class="ric tile t-red" data-ic="trash"></span><span class="rtxt">Clear History</span>
       </div>
     </div>
     <div class="gnote" style="margin-bottom:10px">Everything is saved on this device only.</div>
@@ -664,7 +714,7 @@
     <div class="sheet-nav">
       <button class="nav-btn" onclick="closeAdd()">Cancel</button>
       <h2>Add Food</h2>
-      <button class="nav-btn strong" id="startBtn" onclick="startTimer()">Start</button>
+      <button class="nav-btn strong" onclick="startTimer()">Start</button>
     </div>
     <p class="fixed-note" id="addNote">Timer is set to <b>4 hours</b></p>
     <div class="form-group">
@@ -674,6 +724,8 @@
     <div class="field-err" id="tempErr">Check the temperature — enter a number from -99 to 999°F.</div>
     <div class="slabel">Card color</div>
     <div class="swatches" id="addSwatchRow"></div>
+    <!-- UX over strict Apple: a big target for busy, wet or gloved hands (the bar's "Start" stays reachable above the keyboard) -->
+    <button class="btn blue press big-start" id="startBtn" onclick="startTimer()">Start 4h Timer</button>
   </div>
 </div>
 
@@ -681,9 +733,8 @@
 <div class="overlay" id="colorOverlay">
   <div class="modal lglass">
     <div class="grabber"></div>
-    <h2>Card color</h2>
-    <div class="swatches" id="cardSwatchRow" style="margin-top:14px"></div>
-    <div class="actions"><button class="btn ghost press" onclick="hideOverlay('colorOverlay')">Close</button></div>
+    <div class="sheet-nav"><span></span><h2>Card Color</h2><button class="nav-btn strong" onclick="hideOverlay('colorOverlay')">Done</button></div>
+    <div class="swatches" id="cardSwatchRow" style="margin-top:18px"></div>
   </div>
 </div>
 
@@ -729,14 +780,14 @@ const ICON_RESET = icon('reset'), ICON_TRASH = icon('trash'), ICON_CLOCK = icon(
 // bd = card outline, tint = strong color at the top-left, soft = color across the rest of the card
 const COLORS = {
   slate:  { bd: 'rgba(255,255,255,0)',   tint: 'rgba(255,255,255,0)',  soft: 'rgba(255,255,255,0)',  ac: '#0f172a' },
-  red:    { bd: 'rgba(248,113,113,.85)', tint: 'rgba(239,68,68,.26)',  soft: 'rgba(239,68,68,.1)',  ac: '#dc2626' },
-  orange: { bd: 'rgba(251,146,60,.85)',  tint: 'rgba(249,115,22,.26)', soft: 'rgba(249,115,22,.1)', ac: '#ea580c' },
-  yellow: { bd: 'rgba(234,179,8,.8)',    tint: 'rgba(234,179,8,.28)',  soft: 'rgba(234,179,8,.12)', ac: '#b8890a' },
-  green:  { bd: 'rgba(74,222,128,.85)',  tint: 'rgba(34,197,94,.26)',  soft: 'rgba(34,197,94,.1)',  ac: '#16a34a' },
-  teal:   { bd: 'rgba(45,212,191,.85)',  tint: 'rgba(20,184,166,.26)', soft: 'rgba(20,184,166,.1)', ac: '#0d9488' },
-  blue:   { bd: 'rgba(96,165,250,.85)',  tint: 'rgba(59,130,246,.26)', soft: 'rgba(59,130,246,.1)', ac: '#2563eb' },
-  purple: { bd: 'rgba(192,132,252,.85)', tint: 'rgba(168,85,247,.26)', soft: 'rgba(168,85,247,.1)', ac: '#9333ea' },
-  pink:   { bd: 'rgba(244,114,182,.85)', tint: 'rgba(236,72,153,.26)', soft: 'rgba(236,72,153,.1)', ac: '#db2777' }
+  red:    { bd: 'rgba(248,113,113,.85)', tint: 'rgba(239,68,68,.16)',  soft: 'rgba(239,68,68,.05)',  ac: '#dc2626' },
+  orange: { bd: 'rgba(251,146,60,.85)',  tint: 'rgba(249,115,22,.16)', soft: 'rgba(249,115,22,.05)', ac: '#ea580c' },
+  yellow: { bd: 'rgba(234,179,8,.8)',    tint: 'rgba(234,179,8,.18)',  soft: 'rgba(234,179,8,.06)', ac: '#b8890a' },
+  green:  { bd: 'rgba(74,222,128,.85)',  tint: 'rgba(34,197,94,.16)',  soft: 'rgba(34,197,94,.05)',  ac: '#16a34a' },
+  teal:   { bd: 'rgba(45,212,191,.85)',  tint: 'rgba(20,184,166,.16)', soft: 'rgba(20,184,166,.05)', ac: '#0d9488' },
+  blue:   { bd: 'rgba(96,165,250,.85)',  tint: 'rgba(59,130,246,.16)', soft: 'rgba(59,130,246,.05)', ac: '#2563eb' },
+  purple: { bd: 'rgba(192,132,252,.85)', tint: 'rgba(168,85,247,.16)', soft: 'rgba(168,85,247,.05)', ac: '#9333ea' },
+  pink:   { bd: 'rgba(244,114,182,.85)', tint: 'rgba(236,72,153,.16)', soft: 'rgba(236,72,153,.05)', ac: '#db2777' }
 };
 const NAME_ORDER = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });   // "Rice 2" before "Rice 10"
 const COLOR_ORDER = ['slate','red','orange','yellow','green','teal','blue','purple','pink'];
@@ -908,15 +959,21 @@ function fitOverlays() {
   document.querySelectorAll('.overlay').forEach(o => { o.style.top = top; o.style.height = h; o.style.bottom = 'auto'; });
 }
 function overlayOpen(id) { const o = $(id); return o.classList.contains('show') && !o.classList.contains('closing'); }
+// iOS sheet bar: [left] Title [right]
+function sheetNav(title, left, right) {
+  return `<div class="sheet-nav">${left || '<span></span>'}<h2>${title}</h2>${right || '<span></span>'}</div>`;
+}
+const NAV_CANCEL = '<button class="nav-btn" onclick="closeSheet()">Cancel</button>';
+// a confirmation is an iOS alert: small, centered, Cancel | red action
 function askSheet(title, okLabel, onOk) {
-  openSheet(`<h2>${esc(title)}</h2><div class="actions" style="margin-top:18px"><button class="btn ghost press" onclick="closeSheet()">Cancel</button><button class="btn red press" id="askOk">${esc(okLabel)}</button></div>`);
+  openSheet(`<div class="alert-t">${esc(title)}</div><div class="alert-btns"><button onclick="closeSheet()">Cancel</button><button class="destructive" id="askOk">${esc(okLabel)}</button></div>`, true);
   // ignore a double-tap that lands on Delete right after the box opened under the finger
   $('askOk').onclick = e => { if (e.detail > 1 || Date.now() - ($('sheet').openedAt || 0) < 500) return; closeSheet(); onOk(); };
 }
 function infoSheet(msg) {
-  openSheet(`<h2>${esc(msg)}</h2><div class="actions" style="margin-top:18px"><button class="btn ghost press" onclick="closeSheet()">OK</button></div>`);
+  openSheet(`<div class="alert-t">${esc(msg)}</div><div class="alert-btns"><button class="strong" onclick="closeSheet()">OK</button></div>`, true);
 }
-function openSheet(html) { $('sheetBody').innerHTML = html; hydrateIcons($('sheetBody')); focusableRows($('sheetBody')); showOverlay('sheet'); }
+function openSheet(html, alert) { $('sheet').classList.toggle('alerting', !!alert); $('sheetBody').innerHTML = html; hydrateIcons($('sheetBody')); focusableRows($('sheetBody')); showOverlay('sheet'); }
 function focusableRows(root) { root.querySelectorAll('.row[onclick]').forEach(r => { r.tabIndex = 0; r.setAttribute('role', 'button'); }); }
 function closeSheet() { hideOverlay('sheet'); }
 
@@ -939,7 +996,7 @@ function showTempError(on) { $('tempErr').classList.toggle('show', on); $('foodT
 function openAdd() {
   $('foodName').value = ''; $('foodTemp').value = ''; showTempError(false);
   $('addNote').innerHTML = `Timer is set to <b>${settings.hours} hour${settings.hours === 1 ? '' : 's'}</b> · ${esc(deptName(curDept))}`;
-  $('startBtn').textContent = 'Start';
+  $('startBtn').textContent = `Start ${settings.hours}h Timer`;
   addColor = 'slate'; buildSwatches('addSwatchRow', addColor, pickAddColor);
   showOverlay('overlay'); unlockAudio();
   setTimeout(() => $('foodName').focus(), 50);
@@ -1034,7 +1091,12 @@ function clock(ms) {
 }
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-function dateStr(ms, short) { const d = new Date(ms); return `${MONTHS[d.getMonth()]} ${d.getDate()}` + (short ? '' : `, ${d.getFullYear()}`); }
+// "Today" / "Tomorrow" / "Yesterday" like iOS, else "Nov 9"
+function dateStr(ms) {
+  const d = new Date(ms), t = new Date(), day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day(d) - day(t)) / 86400000);
+  return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
 function barColor(rem) { return rem > DUE_SOON ? '#22c55e' : (rem > 600 ? '#f59e0b' : '#dc2626'); }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function uid() { return Date.now().toString(36) + '-' + Math.floor(performance.now()).toString(36) + '-' + (uid._n = (uid._n || 0) + 1); }
@@ -1049,6 +1111,7 @@ function render() {
   timeEls.clear(); barEls.clear();
   const mine = timers.filter(t => t.dept === curDept);
   $('empty').style.display = mine.length ? 'none' : 'block';
+  document.querySelector('#viewKitchen .toolbar').style.display = mine.length ? '' : 'none';   // no "0 items / Sort by" clutter when empty
   $('itemCount').textContent = mine.length + (mine.length === 1 ? ' item' : ' items');
   const byName = (a, b) => NAME_ORDER.compare(a.name || '', b.name || '');
   const order = mine.sort((a, b) => settings.sort === 'color'
@@ -1070,33 +1133,33 @@ function render() {
     let pill, btns, label, rem, w, c;
     const trash = `<button class="act trash press" onclick="del('${t.id}',this)" aria-label="Delete">${ICON_TRASH}</button>`;
     if (t.state === 'ringing') {
-      pill = '<span class="pill exp"><span class="d"></span>Expired</span>';
+      pill = '<span class="pill exp"><span class="d"></span>Expired</span>';   // Apple: show a status only when it means something
       btns = `<button class="act stop press" onclick="stopRing('${t.id}')">Stop alarm</button>` + trash;
       label = '0:00:00'; rem = `<span class="rem exp">Time's up</span>`; w = 100; c = '#dc2626';
     } else if (t.state === 'done') {
-      pill = '<span class="pill done"><span class="d"></span>Done</span>';
+      pill = '<span class="pill done">Done</span>';
       btns = `<button class="act again press" onclick="restart('${t.id}')">${ICON_RESET} Start again</button>` + trash;
       label = 'Done'; rem = ''; w = 0; c = '#9ca3af';
     } else {
       const due = t.remaining <= DUE_SOON;
-      pill = due ? '<span class="pill due"><span class="d"></span>Due Soon</span>' : '<span class="pill active"><span class="d"></span>Active</span>';
+      pill = due ? '<span class="pill due"><span class="d"></span>Due soon</span>' : '';   // the ticking timer already says "active"
       btns = `<button class="act reset press" onclick="restart('${t.id}')">${ICON_RESET} Reset</button>` + trash;
       label = fmt(t.remaining); rem = `<span class="rem">${ICON_CLOCK} remaining</span>`;
       w = (t.remaining / t.total * 100); c = barColor(t.remaining);
     }
     const tempVal = (t.temp != null) ? (t.temp + '°F') : '—';
     const hot = t.temp != null && t.temp > limitOf(t);
+    const badges = (hot ? `<span class="pill hotb">${icon('thermo')}Above ${limitOf(t)}°F</span>` : '') + pill;
     card.innerHTML =
       `<div class="chead"><div class="cleft">` +
         `<div class="cname"><button class="cdot" style="background:${dotOf(t.color)}" onclick="openColor('${t.id}',event)" aria-label="Change color"></button><span style="color:${col.ac}">${esc(t.name)}</span></div>` +
-        (t.temp != null ? `<div class="csub${hot ? ' hot' : ''}">Started at ${esc(t.temp)}°F${hot ? ` · above ${limitOf(t)}°F` : ''}</div>` : '') +
-      `</div>${pill}</div>` +
+      `</div>${badges ? `<div class="cbadges">${badges}</div>` : ''}</div>` +
       `<div class="trow"><span class="ctime">${label}</span>${rem}</div>` +
       `<div class="pbar"><div class="pfill" style="transform:translateX(${w - 100}%);background:${c}"></div></div>` +
       `<div class="finfo">` +
-        `<div class="fcol"><div class="flabel">Start time</div><div class="fval">${clock(t.startAt)}</div><div class="fdate" data-ms="${t.startAt}">${dateStr(t.startAt, layoutGrid._short)}</div></div>` +
-        `<div class="fcol"><div class="flabel">End time</div><div class="fval">${clock(t.endAt)}</div><div class="fdate" data-ms="${t.endAt}">${dateStr(t.endAt, layoutGrid._short)}</div></div>` +
-        `<div class="fcol"><div class="flabel">Start temp</div><div class="fval">${esc(tempVal)}</div></div>` +
+        `<div class="fcol"><div class="flabel">Started</div><div class="fval">${clock(t.startAt)}</div><div class="fdate" data-ms="${t.startAt}">${dateStr(t.startAt, layoutGrid._short)}</div></div>` +
+        `<div class="fcol"><div class="flabel">Discard at</div><div class="fval">${clock(t.endAt)}</div><div class="fdate" data-ms="${t.endAt}">${dateStr(t.endAt, layoutGrid._short)}</div></div>` +
+        `<div class="fcol"><div class="flabel">Start temp</div><div class="fval${hot ? ' hotv' : ''}">${esc(tempVal)}</div></div>` +
       `</div><div class="cbtns">${btns}</div>` + (t.state === 'ringing' ? '<span class="ringfx"></span>' : '');
     wrap.appendChild(card);
     timeEls.set(t.id, card.querySelector('.ctime'));
@@ -1223,7 +1286,7 @@ function deptRows(withEdit) {
     const ring = timers.filter(t => t.dept === d.id && t.state === 'ringing').length;
     const sel = d.id === curDept;
     return `<div class="row${sel ? ' sel' : ''}" onclick="switchDept('${d.id}', ${withEdit})">` +
-      `<span class="ric">${icon(d.icon || 'tag')}</span><span class="rtxt rname">${esc(d.name)}</span>` +
+      `<span class="ric tile t-indigo">${icon(d.icon || 'tag')}</span><span class="rtxt rname">${esc(d.name)}</span>` +
       (ring ? `<span class="badge-n red">${ring} expired</span>` : (n ? `<span class="badge-n">${n}</span>` : '')) +
       (sel && !withEdit ? `<span class="rcheck">${icon('check')}</span>` : '') +
       (withEdit ? `<button class="edit-btn" onclick="event.stopPropagation();openDeptEdit('${d.id}')" aria-label="Rename or delete">${icon('pencil')}Edit</button>` : '') +
@@ -1232,16 +1295,16 @@ function deptRows(withEdit) {
   `<div class="row blue" onclick="openDeptEdit(null)"><span class="ric">${icon('plus')}</span><span class="rtxt">Add Department</span></div>`;
 }
 function openDeptSheet() {
-  openSheet(`<h2>Department</h2><p class="fixed-note">Each department keeps its own food cards.</p><div class="group">${deptRows(false)}</div>` +
-    `<div class="actions"><button class="btn ghost press" onclick="closeSheet()">Close</button></div>`);
+  openSheet(sheetNav('Department', '', '<button class="nav-btn strong" onclick="closeSheet()">Done</button>') +
+    `<p class="fixed-note">Each department keeps its own food cards.</p><div class="group">${deptRows(false)}</div>`);
 }
 function openDeptEdit(id) {
   const d = id ? deptById(id) : null;
   const n = d ? timers.filter(t => t.dept === d.id).length : 0;
-  openSheet(`<h2>${d ? 'Edit Department' : 'Add Department'}</h2><p class="fixed-note">${d ? (n ? `${n} card${n === 1 ? '' : 's'} in this department` : 'No cards in this department') : 'e.g. Bar, Grill, Front Counter'}</p>` +
-    `<label>Name</label><input type="text" id="deptInput" autocomplete="off" maxlength="30" value="${d ? esc(d.name) : ''}" placeholder="Department name">` +
-    `<div class="actions"><button class="btn ghost press" onclick="closeSheet()">Cancel</button><button class="btn blue press" onclick="saveDeptEdit(${d ? `'${d.id}'` : 'null'})">Save</button></div>` +
-    (d && depts.length > 1 ? `<div class="actions"><button class="btn red press" onclick="deleteDept('${d.id}')">Delete Department</button></div>` : ''));
+  openSheet(sheetNav(d ? 'Edit Department' : 'Add Department', NAV_CANCEL, `<button class="nav-btn strong" onclick="saveDeptEdit(${d ? `'${d.id}'` : 'null'})">Save</button>`) +
+    `<p class="fixed-note">${d ? (n ? `${n} card${n === 1 ? '' : 's'} in this department` : 'No cards in this department') : 'e.g. Bar, Grill, Front Counter'}</p>` +
+    `<div class="form-group"><label class="frow"><span>Name</span><input type="text" id="deptInput" autocomplete="off" maxlength="30" value="${d ? esc(d.name) : ''}" placeholder="Department name" enterkeyhint="done"></label></div>` +
+    (d && depts.length > 1 ? `<div class="form-group"><button class="row-btn destructive" onclick="deleteDept('${d.id}')">Delete Department</button></div>` : ''));
   const inp = $('deptInput');
   inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveDeptEdit(d ? d.id : null); });
   setTimeout(() => inp.focus(), 60);
@@ -1324,7 +1387,7 @@ function renderHistory() {
   // newest first by when the run ended (runs that expired while the app was closed are logged late)
   const list = history.filter(h => histFilter === 'all' || h.dept === histFilter).sort((a, b) => b.endedAt - a.endedAt);
   if (!list.length) {
-    $('histList').innerHTML = `<div class="empty glass" style="margin:18px 0">No history yet.<br><span style="font-size:15px">Items are logged here when they expire, are reset, or are removed.</span></div>`;
+    $('histList').innerHTML = `<div class="empty glass" style="margin:18px 0"><span class="empty-ic">${icon('clock')}</span><div class="empty-t">No History Yet</div><div class="empty-d">Food shows up here when it expires, is reset, or is removed.</div></div>`;
     return;
   }
   let html = history.length >= HIST_MAX - 300
@@ -1400,12 +1463,23 @@ function toggleSetting(key) {
 let sheetVal = 0;
 function stepperSheet(title, note, value, unit, min, max, onSave) {
   sheetVal = value;
-  openSheet(`<h2>${title}</h2><p class="fixed-note">${note}</p>` +
-    `<div class="stepper"><button class="press" id="stMinus">−</button><span class="sv" id="stVal"></span><button class="press" id="stPlus">+</button></div>` +
-    `<div class="actions"><button class="btn ghost press" onclick="closeSheet()">Cancel</button><button class="btn blue press" id="stSave">Save</button></div>`);
+  openSheet(sheetNav(title, NAV_CANCEL, '<button class="nav-btn strong" id="stSave">Save</button>') + `<p class="fixed-note">${note}</p>` +
+    `<div class="stepper"><button class="press" id="stMinus" aria-label="Less">−</button><span class="sv" id="stVal"></span><button class="press" id="stPlus" aria-label="More">+</button></div>`);
   const paint = () => { $('stVal').textContent = unit(sheetVal); };
-  $('stMinus').onclick = () => { sheetVal = Math.max(min, sheetVal - 1); paint(); };
-  $('stPlus').onclick = () => { sheetVal = Math.min(max, sheetVal + 1); paint(); };
+  // press and hold to keep stepping (and speed up), like iOS — no 60 taps to go from 70 to 130
+  const hold = (btn, d) => {
+    let t = null;
+    const stop = () => { clearTimeout(t); t = null; };
+    const step = () => { sheetVal = Math.max(min, Math.min(max, sheetVal + d)); paint(); };
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault(); step();
+      let n = 0; const again = () => { step(); n++; t = setTimeout(again, n > 10 ? 40 : 90); };
+      t = setTimeout(again, 400);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
+    btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); step(); } });
+  };
+  hold($('stMinus'), -1); hold($('stPlus'), 1);
   $('stSave').onclick = () => { onSave(sheetVal); closeSheet(); };
   paint();
 }
@@ -1414,7 +1488,7 @@ function openMinTempSheet() {
     v => { settings.minTemp = v; saveSettings(); render(); renderSettings(); });
 }
 function openTempSheet() {
-  stepperSheet('Max Temperature', 'Food above this start temperature is flagged in red.', settings.maxTemp, v => v + '°F', 32, 212,
+  stepperSheet('Max Temperature', 'Food that starts above this is flagged on its card.', settings.maxTemp, v => v + '°F', 32, 212,
     v => { settings.maxTemp = v; saveSettings(); render(); renderSettings(); });
 }
 function openHoursSheet() {
@@ -1427,7 +1501,7 @@ let installPrompt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; });
 function isStandalone() { return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
 function openInstall() {
-  if (isStandalone()) { openSheet(`<h2>Installed ✓</h2><p class="fixed-note">You're using the app from your home screen.</p><div class="actions"><button class="btn ghost press" onclick="closeSheet()">Close</button></div>`); return; }
+  if (isStandalone()) { infoSheet("Installed — you're using the app from your home screen."); return; }
   if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; }); return; }
   const ua = navigator.userAgent;
   const android = /Android/.test(ua) || (/Linux/.test(ua) && navigator.maxTouchPoints > 0);   // incl. tablets in desktop-site mode
@@ -1440,9 +1514,9 @@ function openInstall() {
     : android
       ? '<ol><li>Tap the browser <b>⋮</b> menu</li><li>Tap <b>Install app</b> (or Add to Home screen)</li></ol>'
       : '<ol><li><b>Chrome / Edge:</b> click the install icon at the right of the address bar</li><li><b>Safari on Mac:</b> File → <b>Add to Dock</b></li></ol>';
-  openSheet(`<h2>Install as App</h2><p class="fixed-note">Opens full screen with its own icon and works offline.</p>${steps}` +
-    `<p class="fixed-note" style="margin-bottom:14px">Tip: install before a shift — the app keeps its own saved timers.</p>` +
-    `<div class="actions"><button class="btn blue press" onclick="closeSheet()">Got it</button></div>`);
+  openSheet(sheetNav('Install as App', '', '<button class="nav-btn strong" onclick="closeSheet()">Done</button>') +
+    `<p class="fixed-note">Opens full screen with its own icon and works offline.</p><div class="form-group steps">${steps}</div>` +
+    `<p class="fixed-note" style="margin:12px 0 4px">Tip: install before a shift — the app keeps its own saved timers.</p>`);
 }
 
 /* ---------- keep screen awake ---------- */
@@ -1679,7 +1753,7 @@ function speed(hist) { const a = hist[0], b = hist[hist.length - 1]; return b[0]
 ['overlay', 'colorOverlay', 'sheet'].forEach(id => {
   const o = $(id), m = o.querySelector('.modal'); let d = null;
   m.addEventListener('pointerdown', e => {
-    if (!overlayOpen(id) || !(e.target.closest && e.target.closest('.grabber, h2'))) return;
+    if (!overlayOpen(id) || o.classList.contains('alerting') || !(e.target.closest && e.target.closest('.grabber, h2'))) return;
     d = { id: e.pointerId, y0: e.clientY, on: false, hist: [[e.timeStamp, e.clientY]] };
   });
   m.addEventListener('pointermove', e => {
