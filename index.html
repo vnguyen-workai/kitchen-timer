@@ -433,6 +433,7 @@
       <button class="dept-btn" onclick="openDeptSheet()"><span id="deptLabel">Kitchen</span><span class="dot-alert" id="deptDot"></span><svg class="ic chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="rules">
         <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleTemp">Temp must not exceed 70&deg;F</span></span>
+        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleMin">Temp must not be below 41&deg;F</span></span>
         <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ruleTime">Discard after 4 hours</span></span>
       </div>
       </div>
@@ -472,6 +473,9 @@
     <div class="group glass">
       <div class="row" onclick="openTempSheet()">
         <span class="ric" data-ic="thermo"></span><span class="rtxt">Max Temperature</span><span class="rval" id="valTemp">70°F</span><span class="rchev" data-ic="chevR"></span>
+      </div>
+      <div class="row" onclick="openMinTempSheet()">
+        <span class="ric" data-ic="thermo"></span><span class="rtxt">Min Temperature</span><span class="rval" id="valMin">41°F</span><span class="rchev" data-ic="chevR"></span>
       </div>
       <div class="row" onclick="openHoursSheet()">
         <span class="ric" data-ic="clock"></span><span class="rtxt">Discard After</span><span class="rval" id="valHours">4 hours</span><span class="rchev" data-ic="chevR"></span>
@@ -634,7 +638,7 @@ let timers = [];   // {id,name,dept,total,remaining,state:'running'|'ringing'|'d
 let history = [];  // {id,name,dept,deptName,color,temp,startAt,endAt,endedAt,outcome:'expired'|'reset'|'removed'}
 let depts = [];    // {id,name,icon}
 let curDept = 'kitchen';
-let settings = { autoReset: false, sound: true, sort: 'name', maxTemp: 70, hours: 4, wake: true };
+let settings = { autoReset: false, sound: true, sort: 'name', maxTemp: 70, minTemp: 41, hours: 4, wake: true };
 let addColor = 'slate';
 let colorEditId = null;
 let enterId = null, enterAll = false;
@@ -678,6 +682,7 @@ function loadSettings() {
   settings.autoReset = !!s.autoReset; settings.sound = s.sound !== false;
   settings.sort = ['name', 'color'].indexOf(s.sort) >= 0 ? s.sort : 'name';
   settings.maxTemp = Number.isFinite(s.maxTemp) ? s.maxTemp : 70;
+  settings.minTemp = Number.isFinite(s.minTemp) ? s.minTemp : 41;
   settings.hours = (Number.isFinite(s.hours) && s.hours >= 1 && s.hours <= 12) ? s.hours : 4;
   settings.wake = s.wake !== false;
 }
@@ -1008,6 +1013,7 @@ function renderAlerts() {
   $('deptLabel').textContent = name;
   $('tabKitchenLabel').textContent = name;
   $('ruleTemp').textContent = `Temp must not exceed ${settings.maxTemp}°F`;
+  $('ruleMin').textContent = `Temp must not be below ${settings.minTemp}°F`;
   $('ruleTime').textContent = `Discard after ${settings.hours} hour${settings.hours === 1 ? '' : 's'}`;
   const ringing = timers.filter(t => t.state === 'ringing');
   const elsewhere = ringing.filter(t => t.dept !== curDept);
@@ -1255,6 +1261,7 @@ function clearHistory() {
 /* ---------- settings ---------- */
 function renderSettings() {
   $('valTemp').textContent = settings.maxTemp + '°F';
+  $('valMin').textContent = settings.minTemp + '°F';
   $('valHours').textContent = settings.hours + (settings.hours === 1 ? ' hour' : ' hours');
   $('deptList').innerHTML = deptRows(true); focusableRows($('deptList'));
   $('swSound').classList.toggle('on', settings.sound);
@@ -1285,6 +1292,10 @@ function stepperSheet(title, note, value, unit, min, max, onSave) {
   $('stPlus').onclick = () => { sheetVal = Math.min(max, sheetVal + 1); paint(); };
   $('stSave').onclick = () => { onSave(sheetVal); closeSheet(); };
   paint();
+}
+function openMinTempSheet() {
+  stepperSheet('Min Temperature', 'Shown in the header as "Temp must not be below".', settings.minTemp, v => v + '°F', -20, 212,
+    v => { settings.minTemp = v; saveSettings(); render(); renderSettings(); });
 }
 function openTempSheet() {
   stepperSheet('Max Temperature', 'Food above this start temperature is flagged in red.', settings.maxTemp, v => v + '°F', 32, 212,
