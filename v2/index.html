@@ -554,6 +554,25 @@
   .alert-btns .destructive { color: var(--red); }
   .alert-btns button:active { background: rgba(120,120,128,.14); }
 
+
+  /* ---- v2 motion: every animation has a job; ease-out for UI, ease-in-out for things moving on screen, under ~300 ms ---- */
+  .view.on { animation: viewIn .25s cubic-bezier(.23, 1, .32, 1) both; }
+  .card { scroll-margin: 84px 0 110px; }   /* scrolled-to cards stop clear of the toolbar and the tab bar */
+  .card.enter { animation: cardIn .32s cubic-bezier(.23, 1, .32, 1) both; }
+  .card.enter > * { animation: kidsIn .24s ease-out both; animation-delay: inherit; }
+  @keyframes cardIn { from { transform: translateY(10px) scale(.97); } }
+  .card.ack { animation: ack .32s cubic-bezier(.23, 1, .32, 1); }
+  @keyframes ack { from { scale: .97; } }
+  .card.ack .ctime { transform-origin: left center; animation: tickPop .32s cubic-bezier(.23, 1, .32, 1); }
+  @keyframes tickPop { from { scale: 1.06; } }
+  .card.spotlight.blue::after { border-color: rgba(0,122,255,.7); }
+  .card.just-expired .ctime { animation: shake .5s cubic-bezier(.36, .07, .19, .97); }
+  @keyframes shake { 15% { translate: -6px; } 35% { translate: 5px; } 55% { translate: -3px; } 75% { translate: 2px; } }
+  /* iOS switch: the knob stretches while you press it */
+  .ios-sw::after { transition: transform .32s cubic-bezier(.23, 1, .32, 1), width .18s cubic-bezier(.23, 1, .32, 1); }
+  .row:active .ios-sw::after { width: 33px; }
+  .row:active .ios-sw.on::after { transform: translateX(14px); }
+
   /* iPhone/iPad "Reduce Transparency" setting */
   @media (prefers-contrast: more) {
     .glass, .lglass, .modal, .card, .notice-card { background-color: rgba(255,255,255,.96); }
@@ -825,6 +844,7 @@ const CUR_DEPT_STORE = 'v2.kitchenCurDept';
 const HIST_STORE = 'v2.kitchenHistory';
 const SET_STORE = 'v2.kitchenSettings';
 const timeEls = new Map();
+const justExpired = new Set();   // cards that expired this moment get one attention shake
 const barEls = new Map();
 
 function holdSecs() { return settings.hours * 3600; }
@@ -1021,6 +1041,12 @@ function startTimer() {
   });
   enterId = id;
   save(); closeAdd(); render();
+  // the list is sorted, so the new card can land off-screen: bring it into view and light it up blue
+  const card = document.querySelector(`.card[data-id="${id}"]`);
+  if (card) {
+    card.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+    card.classList.add('spotlight', 'blue'); setTimeout(() => card.classList.remove('spotlight', 'blue'), 1500);
+  }
 }
 
 /* ---------- card color ---------- */
@@ -1048,14 +1074,25 @@ function restart(id) {
   // double-tap so an expired item can't be restarted (or a new run reset) by accident
   if (Date.now() - (t.actedAt || 0) < 700) return;
   if (t.state === 'running') logRun(t, 'reset');
-  newRun(t); save(); render();
+  const was = t.state === 'running' ? t.remaining / t.total : 0;
+  newRun(t); save(); render(); ackCard(id, was);
+}
+// show which card just changed: it settles, the time pops, and the bar refills from where it was
+function ackCard(id, fromFrac) {
+  if (reducedMotion) return;
+  const card = document.querySelector(`.card[data-id="${id}"]`); if (!card) return;
+  card.classList.remove('ack'); void card.offsetWidth; card.classList.add('ack');
+  setTimeout(() => card.classList.remove('ack'), 400);
+  const bar = card.querySelector('.pfill');
+  if (bar && bar.animate && fromFrac != null && card.classList.contains('done') === false)
+    bar.animate([{ transform: `translateX(${fromFrac * 100 - 100}%)` }, { transform: 'translateX(0%)' }], { duration: 600, easing: 'cubic-bezier(.23, 1, .32, 1)' });
 }
 function stopRing(id) {
   const t = timers.find(x => x.id === id); if (!t || t.state !== 'ringing') return;
   if (settings.autoReset) newRun(t);
   else { t.state = 'done'; t.remaining = 0; t.actedAt = Date.now(); delete t.autoRestartAt; }
   if (!timers.some(x => x.state === 'ringing')) stopAlarm();   // silence immediately, don't wait for the tick
-  save(); render();
+  save(); render(); ackCard(id, t.state === 'running' ? 0 : null);
 }
 function del(id, btn) {
   if (Date.now() - (del.at || 0) < 500) return;   // the next card slides under the finger at once
@@ -1071,7 +1108,7 @@ function del(id, btn) {
   if (!card || reducedMotion || !card.animate) return remove();
   card.style.pointerEvents = 'none';
   card.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(.92)' }],
-    { duration: 220, easing: 'ease-in', fill: 'forwards' }).onfinish = remove;
+    { duration: 200, easing: 'cubic-bezier(.23, 1, .32, 1)', fill: 'forwards' }).onfinish = remove;   // exits ease out too: no slow start
 }
 function setSort(v) { settings.sort = v; saveSettings(); render(); }
 
@@ -1118,12 +1155,14 @@ function render() {
     ? (COLOR_ORDER.indexOf(a.color) - COLOR_ORDER.indexOf(b.color)) || byName(a, b)
     : byName(a, b));
   wrap.innerHTML = '';
-  order.forEach(t => {
+  order.forEach((t, i) => {
     const col = colorOf(t);
     const card = document.createElement('div');
     card.dataset.id = t.id;
     const entering = !reducedMotion && (enterAll || t.id === enterId);
     card.className = 'card' + (t.state === 'ringing' ? ' ringing' : '') + (t.state === 'done' ? ' done' : '') + (entering ? ' enter' : '');
+    if (entering && enterAll) card.style.animationDelay = Math.min(i, 6) * 40 + 'ms';   // department switch: cards arrive one after another
+    if (justExpired.delete(t.id)) card.classList.add('just-expired');
     if (t.state !== 'ringing') {   // expired cards keep their red ring/tint from CSS
       card.style.setProperty('--ring', col.bd);
       card.style.setProperty('--tint', col.tint);
@@ -1174,7 +1213,7 @@ function render() {
       const l = el.getBoundingClientRect();
       const dx = f.left - l.left, dy = f.top - l.top;
       if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-        el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.32,.72,0,1)' });
+        el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.65, 0, .35, 1)' });
       }
     });
   }
@@ -1553,6 +1592,7 @@ function tick() {
       }
       if (rem === 0) {
         t.state = 'ringing'; logRun(t, 'expired', t.endAt);
+        if (now - t.endAt < 60000) justExpired.add(t.id);
         // Auto-reset: beep 3 times (0 / 0.7 / 1.4 s), then count down again. Only for an expiry that just
         // happened — food that ran out while the app was closed or asleep still waits for someone to tap Stop.
         if (settings.autoReset && now - t.endAt < 60000) {
