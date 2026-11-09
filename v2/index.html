@@ -584,6 +584,9 @@
   .rchip.on { background: var(--blue); color: #fff; box-shadow: none; }
   .rdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1.5px rgba(255,255,255,.7); }
   #recentWrap .slabel { margin-top: 14px; }
+  #multiTempsLabel { margin-top: 16px; }
+  #multiTemps { margin-top: 0; }
+  .frow .tname { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .act.silence { flex: 0 0 auto; padding: 0 20px; background: var(--fill); color: var(--ink); box-shadow: none; }
   .act.holdable { position: relative; overflow: hidden; }
   .hold-fill { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,122,255,.22); transform-origin: left center; transform: scaleX(0); transition: transform .18s cubic-bezier(.23,1,.32,1); }
@@ -767,8 +770,11 @@
     <div id="recentWrap"><div class="slabel">Quick add · tap one or more</div><div class="recents" id="recentRow"></div></div>
     <div class="form-group">
       <label class="frow"><span>Food</span><input type="text" id="foodName" placeholder="Beef, Crab, Chicken…" autocomplete="off" maxlength="60" enterkeyhint="next"></label>
-      <label class="frow"><span>Start temp</span><input type="number" id="foodTemp" inputmode="decimal" step="any" min="-99" max="999" placeholder="Optional" enterkeyhint="done"><span class="unit">°F</span></label>
+      <label class="frow" id="tempRow"><span>Start temp</span><input type="number" id="foodTemp" inputmode="decimal" step="any" min="-99" max="999" placeholder="Optional" enterkeyhint="done"><span class="unit">°F</span></label>
     </div>
+    <!-- several foods: each gets its own measured temp (one shared number would look copied to an inspector) -->
+    <div class="slabel" id="multiTempsLabel" style="display:none">Start temp for each</div>
+    <div class="form-group" id="multiTemps" style="display:none"></div>
     <div class="field-err" id="tempErr">Check the temperature — enter a number from -99 to 999°F.</div>
     <div class="slabel">Card color</div>
     <div class="swatches" id="addSwatchRow"></div>
@@ -1073,16 +1079,23 @@ function togglePick(i) {
 function addItems() {
   const typed = $('foodName').value.trim();
   const items = addPicks.map(p => ({ name: p.name, color: p.color }));
-  if (typed) items.push({ name: typed, color: addColor });
+  if (typed) items.push({ name: typed, color: addColor, typed: true });
   return items;
 }
+let itemTemps = {};   // temps typed per food, kept while the picks change
 function paintStart() {
-  const n = addItems().length;
-  $('startBtn').textContent = n > 1 ? `Start ${n} Timers` : `Start ${settings.hours}h Timer`;
-  $('foodTemp').placeholder = n > 1 ? 'Same for all · optional' : 'Optional';
+  const items = addItems(), n = items.length, multi = n > 1, box = $('multiTemps');
+  $('startBtn').textContent = multi ? `Start ${n} Timers` : `Start ${settings.hours}h Timer`;
+  box.querySelectorAll('input').forEach(i => { itemTemps[i.dataset.k] = i.value; });
+  $('tempRow').style.display = multi ? 'none' : '';
+  box.style.display = $('multiTempsLabel').style.display = multi ? '' : 'none';
+  box.innerHTML = multi ? items.map(it => {
+    const k = it.typed ? '__typed__' : it.name;
+    return `<label class="frow"><span class="tname">${esc(it.name)}</span><input type="number" data-k="${esc(k)}" inputmode="decimal" step="any" min="-99" max="999" placeholder="Optional" value="${esc(itemTemps[k] || '')}"><span class="unit">°F</span></label>`;
+  }).join('') : '';
 }
 function openAdd() {
-  $('foodName').value = ''; $('foodTemp').value = ''; showTempError(false); addPicks = [];
+  $('foodName').value = ''; $('foodTemp').value = ''; showTempError(false); addPicks = []; itemTemps = {}; $('multiTemps').innerHTML = '';   // no temps left over from the last food
   $('addNote').innerHTML = `Timer is set to <b>${settings.hours} hour${settings.hours === 1 ? '' : 's'}</b> · ${esc(deptName(curDept))}`;
   $('startBtn').textContent = `Start ${settings.hours}h Timer`;
   addColor = 'slate'; buildSwatches('addSwatchRow', addColor, pickAddColor);
@@ -1096,18 +1109,32 @@ function startTimer() {
   if (!overlayOpen('overlay')) return;   // double-tap / double-Enter must not add the food twice
   const items = addItems(); if (!items.length) items.push({ name: 'Food', color: addColor });
   const total = holdSecs();
+  // read and check a temp box: a number from -99 to 999, or empty
+  const readTemp = inp => {
+    const raw = inp.value.trim(), v = raw === '' ? NaN : Number(raw);
+    const bad = (raw !== '' && !(v >= -99 && v <= 999)) || (raw === '' && inp.validity.badInput);
+    inp.classList.toggle('bad', bad);
+    return { bad, val: Number.isFinite(v) ? Math.round(v * 10) / 10 : null };
+  };
+  let temps = null;
+  if (items.length > 1) {
+    const read = [...$('multiTemps').querySelectorAll('input')].map(readTemp);
+    const firstBad = read.findIndex(x => x.bad);
+    if (firstBad >= 0) { $('tempErr').classList.add('show'); $('multiTemps').querySelectorAll('input')[firstBad].focus(); return; }
+    temps = read.map(x => x.val);
+  }
   const tempRaw = $('foodTemp').value.trim();
   const temp = tempRaw === '' ? NaN : Number(tempRaw);
   // a typo like 1650 (for 165.0) must not go into the log; the browser also reports '' for text like "4o"
-  const badTemp = (tempRaw !== '' && !(temp >= -99 && temp <= 999)) || (tempRaw === '' && $('foodTemp').validity.badInput);
+  const badTemp = !temps && ((tempRaw !== '' && !(temp >= -99 && temp <= 999)) || (tempRaw === '' && $('foodTemp').validity.badInput));
   if (badTemp) { showTempError(true); $('foodTemp').focus(); return; }
   const now = Date.now();
-  const ids = items.map(it => {
+  const ids = items.map((it, i) => {
     const id = uid();
     timers.push({
       id, name: it.name, dept: curDept, total, remaining: total, state: 'running',
       startAt: now, endAt: now + total * 1000, created: now,
-      temp: Number.isFinite(temp) ? Math.round(temp * 10) / 10 : null, color: it.color, logged: false,
+      temp: temps ? temps[i] : (Number.isFinite(temp) ? Math.round(temp * 10) / 10 : null), color: it.color, logged: false,
       maxTemp: settings.maxTemp   // the limit at the time — changing it later mustn't re-flag this food
     });
     enterIds.add(id); return id;
@@ -1930,6 +1957,7 @@ $('foodName').addEventListener('keydown', e => { if (e.key === 'Enter') startTim
 $('foodTemp').addEventListener('keydown', e => { if (e.key === 'Enter') startTimer(); });
 $('foodTemp').addEventListener('input', () => showTempError(false));
 $('foodName').addEventListener('input', paintStart);
+$('multiTemps').addEventListener('input', e => { e.target.classList.remove('bad'); $('tempErr').classList.remove('show'); });
 
 /* ---------- Reset: press and hold (a stray tap can't restart a food's holding time) ---------- */
 (function () {
