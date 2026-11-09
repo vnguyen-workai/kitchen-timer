@@ -420,6 +420,88 @@
   @keyframes sheetUp { from { transform: translateY(calc(100% + 60px)); } }
   @keyframes sheetDown { to { transform: translateY(calc(100% + 60px)); } }
 
+
+  /* ================= v2: Apple iOS 26 redesign =================
+     Content is solid (cards, lists); Liquid Glass is only for controls that float above it
+     (toolbar buttons, tab bar, sheets) — Apple's materials rule. Colors are Apple's system colors. */
+  :root { --blue: #007aff; --red: #ff3b30; --green: #34c759; --label2: rgba(60,60,67,.6); --fill: rgba(120,120,128,.12); --sep: rgba(60,60,67,.18); }
+  html { background: #f2f2f7; }
+  body::before { opacity: .5; }   /* the soft color field stays, gentler, so the glass still has something to show */
+
+  /* toolbar */
+  .topbar { position: sticky; top: 0; z-index: 12; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: calc(10px + var(--safe-t)) 16px 10px; }
+  .topbar::after { content: ""; position: absolute; top: 0; right: 0; bottom: -28px; left: 0; z-index: -1; pointer-events: none; opacity: 0;
+    background: linear-gradient(to bottom, rgba(242,242,247,.94) 55%, rgba(242,242,247,0)); transition: opacity .25s; }   /* scroll-edge effect, only once content is under it */
+  .topbar.scrolled::after { opacity: 1; }
+  .topbar .dept-btn { justify-self: start; height: 44px; padding: 0 14px 0 16px; font-size: 14px; letter-spacing: 1px; }
+  .topbar .add-btn { justify-self: end; grid-column: auto; grid-row: auto; align-self: center; width: auto; margin: 0; height: 44px; padding: 0 18px; font-size: 16px;
+    background: var(--blue); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 4px 14px rgba(0,122,255,.28); }
+  .topbar-title { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 34vw; opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .25s cubic-bezier(.2, .8, .2, 1); }
+  .topbar.scrolled .topbar-title { opacity: 1; transform: none; }
+
+  /* large title */
+  header.largetitle { display: block; margin: 2px 20px 0; padding: 0; border-radius: 0; background: none; box-shadow: none; }
+  .largetitle .rest-name { font-size: clamp(34px, 5vw, 46px); font-weight: 800; letter-spacing: -.02em; }
+  .largetitle .log-title { font-size: 17px; font-weight: 600; color: var(--label2); margin-top: 2px; }
+  .largetitle .rules { margin-top: 10px; gap: 4px 18px; color: var(--label2); font-size: 15px; }
+  .largetitle .rule .ic { color: var(--label2); }
+
+  /* content: solid cards, still tinted with their color */
+  .card { background-color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 24px;
+    box-shadow: inset 0 0 0 2px var(--ring), 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.06); }
+  .card::before { display: none; }
+  .pill { box-shadow: none; font-weight: 600; }
+  .pill.active { background: rgba(52,199,89,.14); color: #248a3d; }
+  .pill.due, .pill.reset { background: rgba(255,149,0,.16); color: #c93400; }
+  .pill.exp { background: rgba(255,59,48,.14); color: #d70015; }
+  .pill.done { background: var(--fill); color: var(--label2); }
+  .act { height: 50px; border-radius: 999px; }
+  .act.reset { background: var(--fill); color: var(--ink); box-shadow: none; }
+  .act.trash { flex: 0 0 50px; width: 50px; border-radius: 50%; background: rgba(255,59,48,.12); color: var(--red); box-shadow: none; }
+  .act.stop { background: var(--red); box-shadow: 0 4px 14px rgba(255,59,48,.3); }
+  .act.again { background: var(--blue); box-shadow: none; }
+  .btn { border-radius: 999px; }
+  .btn.blue { background: var(--blue); box-shadow: none; }
+  .btn.ghost { background: var(--fill); }
+  .btn.red { background: rgba(255,59,48,.12); color: var(--red); }
+
+  /* lists (Settings, History): plain white inset groups */
+  .group.glass, .empty.glass { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  .group.glass::before, .empty.glass::before { display: none; }
+  .row + .row::before { height: .5px; background: var(--sep); }
+  .page-title { font-size: 34px; letter-spacing: -.02em; }
+  .glabel { font-weight: 400; letter-spacing: 0; color: var(--label2); }
+  .chip { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  .chip::before { display: none; }
+  .chip.on { background: var(--blue); box-shadow: none; }
+  .edit-btn { background: rgba(0,122,255,.1); color: var(--blue); }
+
+  /* Add Food: iOS form sheet */
+  .sheet-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin: -6px -8px 2px; }
+  .modal .sheet-nav h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: 0; }
+  .nav-btn { justify-self: start; border: none; background: none; font: inherit; font-size: 17px; color: var(--blue); padding: 10px 8px; border-radius: 10px; cursor: pointer; transition: opacity .1s; }
+  .nav-btn.strong { justify-self: end; font-weight: 600; }
+  .nav-btn:active { opacity: .35; }
+  .modal .form-group { background: rgba(255,255,255,.88); border-radius: 14px; overflow: hidden; margin: 10px 0 0; }
+  .modal label.frow { display: flex; align-items: center; gap: 12px; min-height: 52px; margin: 0; padding: 0 16px; font-size: 17px; font-weight: 400; color: var(--ink); cursor: text; }
+  .modal label.frow + label.frow { border-top: .5px solid var(--sep); }
+  .frow > span:first-child { width: 96px; flex-shrink: 0; }
+  .modal .frow input[type=text], .modal .frow input[type=number] { flex: 1; min-width: 0; margin: 0; padding: 14px 0; border: none; border-radius: 0; background: transparent; box-shadow: none; font-size: 17px; }
+  .modal .frow input:focus, .modal .frow input.bad { box-shadow: none; }
+  .frow .unit { color: var(--label2); }
+  .frow:has(input.bad) { background: rgba(255,59,48,.08); }
+  .modal .field-err { margin: 8px 16px 0; }
+  .modal .slabel { margin: 18px 16px 10px; font-size: 13px; text-transform: uppercase; color: var(--label2); }
+  .modal .fixed-note { margin-bottom: 4px; font-size: 13px; }
+  #overlay .swatches { margin-bottom: 6px; }
+
+  @media (max-width: 639px) {
+    .topbar { padding-left: 12px; padding-right: 12px; }
+    .topbar .add-btn { padding: 0 14px; font-size: 15px; }
+    header.largetitle { margin: 0 16px; }
+    .topbar-title { max-width: 26vw; }
+  }
+
   /* iPhone/iPad "Reduce Transparency" setting */
   @media (prefers-contrast: more) {
     .glass, .lglass, .modal, .card, .notice-card { background-color: rgba(255,255,255,.96); }
@@ -450,20 +532,20 @@
 
 <!-- ================= KITCHEN ================= -->
 <main class="view on" id="viewKitchen">
-  <header class="glass">
-    <div class="hmain">
-      <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
-      <div class="log-title">Time / Temp Control Log <span class="vtag">v2</span></div>
-      <div class="hrow">
-      <button class="dept-btn" onclick="openDeptSheet()"><span id="deptLabel">Kitchen</span><span class="dot-alert" id="deptDot"></span><svg class="ic chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
-      <div class="rules">
+  <!-- toolbar floats over the content (glass controls); the big name below tucks into it when you scroll -->
+  <div class="topbar" id="topbar">
+    <button class="dept-btn" onclick="openDeptSheet()"><span id="deptLabel">Kitchen</span><span class="dot-alert" id="deptDot"></span><svg class="ic chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="topbar-title" id="topTitle"></div>
+    <button class="add-btn press" onclick="openAdd()"><span class="plus">+</span> Add Food</button>
+  </div>
+  <header class="largetitle">
+    <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
+    <div class="log-title">Time / Temp Control Log <span class="vtag">v2</span></div>
+    <div class="rules">
         <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleTemp">Temp must not exceed 70&deg;F</span></span>
         <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleMin">Temp must not be below 41&deg;F</span></span>
         <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ruleTime">Discard after 4 hours</span></span>
       </div>
-      </div>
-    </div>
-    <button class="add-btn press" onclick="openAdd()"><span class="plus">+</span> Add Food</button>
   </header>
 
   <div class="toolbar">
@@ -576,19 +658,20 @@
 <div class="overlay" id="overlay">
   <div class="modal lglass">
     <div class="grabber"></div>
-    <h2>Add Food</h2>
-    <p class="fixed-note" id="addNote">Timer is set to <b>4 hours</b></p>
-    <label>Food name</label>
-    <input type="text" id="foodName" placeholder="e.g. Beef, Crab, Chicken" autocomplete="off" maxlength="60">
-    <label>Start temp °F <small style="color:#9aa1ab">(optional)</small></label>
-    <input type="number" id="foodTemp" inputmode="decimal" step="any" min="-99" max="999" placeholder="e.g. 38.5">
-    <div class="field-err" id="tempErr">Check the temperature — enter a number from -99 to 999°F.</div>
-    <label>Card color</label>
-    <div class="swatches" id="addSwatchRow"></div>
-    <div class="actions">
-      <button class="btn ghost press" onclick="closeAdd()">Cancel</button>
-      <button class="btn blue press" id="startBtn" onclick="startTimer()">Start 4h Timer</button>
+    <!-- iOS form sheet: Cancel and the main action sit in the sheet's own bar -->
+    <div class="sheet-nav">
+      <button class="nav-btn" onclick="closeAdd()">Cancel</button>
+      <h2>Add Food</h2>
+      <button class="nav-btn strong" id="startBtn" onclick="startTimer()">Start</button>
     </div>
+    <p class="fixed-note" id="addNote">Timer is set to <b>4 hours</b></p>
+    <div class="form-group">
+      <label class="frow"><span>Food</span><input type="text" id="foodName" placeholder="Beef, Crab, Chicken…" autocomplete="off" maxlength="60" enterkeyhint="next"></label>
+      <label class="frow"><span>Start temp</span><input type="number" id="foodTemp" inputmode="decimal" step="any" min="-99" max="999" placeholder="Optional" enterkeyhint="done"><span class="unit">°F</span></label>
+    </div>
+    <div class="field-err" id="tempErr">Check the temperature — enter a number from -99 to 999°F.</div>
+    <div class="slabel">Card color</div>
+    <div class="swatches" id="addSwatchRow"></div>
   </div>
 </div>
 
@@ -854,7 +937,7 @@ function showTempError(on) { $('tempErr').classList.toggle('show', on); $('foodT
 function openAdd() {
   $('foodName').value = ''; $('foodTemp').value = ''; showTempError(false);
   $('addNote').innerHTML = `Timer is set to <b>${settings.hours} hour${settings.hours === 1 ? '' : 's'}</b> · ${esc(deptName(curDept))}`;
-  $('startBtn').textContent = `Start ${settings.hours}h Timer`;
+  $('startBtn').textContent = 'Start';
   addColor = 'slate'; buildSwatches('addSwatchRow', addColor, pickAddColor);
   showOverlay('overlay'); unlockAudio();
   setTimeout(() => $('foodName').focus(), 50);
@@ -1541,6 +1624,12 @@ window.addEventListener('storage', e => {
   if (!timers.some(t => t.state === 'ringing')) stopAlarm();   // Stop pressed in the other copy
   renderNotice();
 });
+
+/* ---------- large title tucks into the toolbar once it scrolls under it (like Settings / Mail) ---------- */
+addEventListener('scroll', () => {
+  const on = scrollY > 56, tb = $('topbar');
+  if (tb.classList.contains('scrolled') !== on) { tb.classList.toggle('scrolled', on); $('topTitle').textContent = $('restName').value.trim() || 'Kitchen Log'; }
+}, { passive: true });
 
 /* ---------- gestures (apple-design: 1:1 tracking, velocity hand-off, momentum projection, rubber-banding) ---------- */
 // where a flick would come to rest (Apple's deceleration formula, from "Designing Fluid Interfaces")
