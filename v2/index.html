@@ -687,7 +687,7 @@
     <div class="log-title">Time / Temp Control Log <span class="vtag">v2</span></div>
     <div class="rules">
         <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleTemp">Temp must not exceed 70&deg;F</span></span>
-        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleMin">Start temp must be 41&deg;F or below</span></span>
+        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleMin">Start temp must be below 41&deg;F</span></span>
         <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ruleTime">Discard after 4 hours</span></span>
       </div>
   </header>
@@ -936,7 +936,7 @@ function loadSettings() {
   // most urgent first by default; a sort someone picked on purpose is kept
   settings.sortChosen = !!s.sortChosen;
   settings.sort = settings.sortChosen && ['time', 'name', 'color'].indexOf(s.sort) >= 0 ? s.sort : 'time';
-  // food-code limits: food may never go above 71°F, and must start at 41°F or below
+  // food-code limits: food may never go above 71°F, and must start below 41°F
   settings.maxTemp = Number.isFinite(s.maxTemp) ? Math.min(MAX_TEMP_CAP, s.maxTemp) : 70;
   settings.minTemp = Number.isFinite(s.minTemp) ? Math.min(START_TEMP_CAP, s.minTemp) : 41;
   settings.hours = (Number.isFinite(s.hours) && s.hours >= 1 && s.hours <= 12) ? s.hours : 4;
@@ -1158,7 +1158,7 @@ function startTimer() {
   const badTemp = (tempRaw !== '' && !(temp >= -99 && temp <= 999)) || (tempRaw === '' && $('foodTemp').validity.badInput);
   if (badTemp) { showTempError(true); $('foodTemp').focus(); return; }
   // too warm to start a time-control run: it has to be chilled first
-  if (Number.isFinite(temp) && temp > settings.minTemp) { showTempError(true, `Start temp must be ${settings.minTemp}°F or below — chill the food first.`); $('foodTemp').focus(); return; }
+  if (Number.isFinite(temp) && temp >= settings.minTemp) { showTempError(true, `Start temp must be below ${settings.minTemp}°F — chill the food first.`); $('foodTemp').focus(); return; }
   const now = Date.now();
   const id = uid();
   timers.push({
@@ -1381,7 +1381,7 @@ function renderAlerts() {
   $('deptLabel').textContent = name;
   $('tabKitchenLabel').textContent = name;
   $('ruleTemp').textContent = `Temp must not exceed ${settings.maxTemp}°F`;
-  $('ruleMin').textContent = `Start temp must be ${settings.minTemp}°F or below`;
+  $('ruleMin').textContent = `Start temp must be below ${settings.minTemp}°F`;
   $('ruleTime').textContent = `Discard after ${settings.hours} hour${settings.hours === 1 ? '' : 's'}`;
   const ringing = timers.filter(t => t.state === 'ringing');
   const elsewhere = ringing.filter(t => t.dept !== curDept);
@@ -1640,7 +1640,7 @@ function stepperSheet(title, note, value, unit, min, max, onSave) {
   paint();
 }
 function openMinTempSheet() {
-  stepperSheet('Start Temp Limit', `Food must start at this temperature or below. It can't be set above ${START_TEMP_CAP}°F.`, settings.minTemp, v => v + '°F', 0, START_TEMP_CAP,
+  stepperSheet('Start Temp Limit', `Food must start below this temperature. It can't be set above ${START_TEMP_CAP}°F.`, settings.minTemp, v => v + '°F', 0, START_TEMP_CAP,
     v => { settings.minTemp = v; saveSettings(); render(); renderSettings(); });
 }
 function openTempSheet() {
