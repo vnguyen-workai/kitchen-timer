@@ -471,6 +471,12 @@
   .largetitle .rules { margin-top: 14px; padding: 14px 18px; gap: 8px 26px; border-radius: 18px; background: #fff;
     box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.05); color: var(--ink); font-size: 16px; font-weight: 500; }
   .largetitle .rule .ic { color: var(--blue); font-size: 18px; }
+  /* the rules are a warning: caution yellow block, red icons and limits, so staff can't miss them */
+  .largetitle .rules.warn { background: #fff4c2; border: 1px solid rgba(217,119,6,.45); color: #422006; font-weight: 600;
+    box-shadow: 0 1px 2px rgba(120,53,15,.06), 0 6px 20px rgba(217,119,6,.14); }
+  .largetitle .rules.warn .rule .ic { color: #dc2626; }
+  .largetitle .rules.warn .rv { color: #dc2626; font-weight: 800; }
+  .largetitle .rules.warn .rule + .rule { border-color: rgba(217,119,6,.35); }
   /* iPad / PC: three equal sections with hairline dividers, so the block is filled evenly (no empty space on the right) */
   @media (min-width: 900px) {
     .largetitle .rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: 14px 0; }
@@ -685,10 +691,10 @@
   <header class="largetitle">
     <input class="rest-name" id="restName" type="text" placeholder="Restaurant name" autocomplete="off">
     <div class="log-title">Time / Temp Control Log <span class="vtag">v2</span></div>
-    <div class="rules">
-        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleTemp">Temp must not exceed 71&deg;F</span></span>
-        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleMin">Start temp must be below 41&deg;F</span></span>
-        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ruleTime">Discard after 4 hours</span></span>
+    <div class="rules warn">
+        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleTemp">Temp must not exceed <b class="rv">71&deg;F</b></span></span>
+        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 1 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg><span id="ruleMin">Start temp must be below <b class="rv">41&deg;F</b></span></span>
+        <span class="rule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ruleTime">Discard after <b class="rv">4 hours</b></span></span>
       </div>
   </header>
   <div class="soundhint" id="soundHint" role="status"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>Tap anywhere to turn on the alarm sound</div>
@@ -1374,9 +1380,9 @@ function renderAlerts() {
   const name = deptName(curDept);
   $('deptLabel').textContent = name;
   $('tabKitchenLabel').textContent = name;
-  $('ruleTemp').textContent = `Temp must not exceed ${settings.maxTemp}°F`;
-  $('ruleMin').textContent = `Start temp must be below ${settings.minTemp}°F`;
-  $('ruleTime').textContent = `Discard after ${settings.hours} hour${settings.hours === 1 ? '' : 's'}`;
+  $('ruleTemp').innerHTML = `Temp must not exceed <b class="rv">${settings.maxTemp}°F</b>`;
+  $('ruleMin').innerHTML = `Start temp must be below <b class="rv">${settings.minTemp}°F</b>`;
+  $('ruleTime').innerHTML = `Discard after <b class="rv">${settings.hours} hour${settings.hours === 1 ? '' : 's'}</b>`;
   const ringing = timers.filter(t => t.state === 'ringing');
   const elsewhere = ringing.filter(t => t.dept !== curDept);
   $('deptDot').classList.toggle('show', elsewhere.length > 0);
